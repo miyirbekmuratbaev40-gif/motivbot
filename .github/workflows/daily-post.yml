@@ -1,0 +1,43 @@
+name: Kunlik Instagram post
+
+on:
+  schedule:
+    # Har kuni ertalab soat 08:00 (Toshkent, UTC+5) = 03:00 UTC da ishga tushadi
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}   # Qo'lda ham ishga tushirish imkoniyati (Actions bo'limidan)
+
+jobs:
+  post-to-instagram:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repozitoriyani olish
+        uses: actions/checkout@v4
+
+      - name: Python o'rnatish
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Kutubxonalarni o'rnatish
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install -r requirements.txt
+
+      - name: Video yaratish
+        run: python generate_video.py
+
+      - name: Instagram'ga joylash
+        env:
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_UPLOAD_PRESET: ${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: python upload_and_post.py
+
+      - name: Holatni saqlash (qaysi iqtiboslar ishlatilgani)
+        run: |
+          git config user.name "motivbot"
+          git config user.email "motivbot@users.noreply.github.com"
+          git add state.json
+          git commit -m "state.json yangilandi [skip ci]" || echo "O'zgarish yo'q"
+          git push
