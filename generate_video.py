@@ -1,42 +1,55 @@
 """
-generate_video.py
-------------------
-Motivatsion iqtibos matnidan avtomatik ravishda vertikal (1080x1920,
-Instagram Reels formati) video yaratadi. Sekin zoom effekti va
-fade-in/fade-out bilan.
+generate_video.py (v3 - qiziqarli faktlar, ovozli, real fon videoli)
+----------------------------------------------------------------------
+1) Tasodifiy qiziqarli fakt tanlaydi (facts.json)
+2) Matnni o'zbekcha tabiiy ovozga aylantiradi (Microsoft Edge TTS,
+   uz-UZ-SardorNeural / uz-UZ-MadinaNeural - bepul, API kalit shart emas)
+3) Pexels'dan mavzuga mos bepul stock-video (fon) yuklab oladi
+4) "BILASIZMI?" hook + fakt matnini shaffof PNG sifatida chizadi
+5) ffmpeg orqali hammasini birlashtirib, ovozli, 1080x1920 Reels video yaratadi
 
-Chiqish: output/video.mp4 va output/caption.txt
+Kerakli muhit o'zgaruvchisi:
+    PEXELS_API_KEY   (bepul, pexels.com/api dan olinadi)
 """
 
+import asyncio
 import json
 import os
 import random
 import subprocess
+import sys
 import textwrap
 from datetime import datetime
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import requests
+from PIL import Image, ImageDraw, ImageFont
 
 WIDTH, HEIGHT = 1080, 1920
 FONT_BOLD = "fonts/Font-Bold.ttf"
 FONT_REGULAR = "fonts/Font-Regular.ttf"
-QUOTES_FILE = "quotes.json"
+FACTS_FILE = "facts.json"
 STATE_FILE = "state.json"
 OUTPUT_DIR = "output"
 
-# Bir-biriga mos keladigan gradient rang palitralari (top, bottom)
-PALETTES = [
-    ((20, 24, 38), (64, 43, 110)),
-    ((10, 30, 45), (14, 90, 100)),
-    ((35, 15, 45), (110, 40, 70)),
-    ((15, 35, 25), (30, 90, 60)),
-    ((40, 20, 15), (110, 60, 20)),
-    ((15, 15, 40), (50, 50, 120)),
+VOICES = ["uz-UZ-SardorNeural", "uz-UZ-MadinaNeural"]
+
+# Pexels qidiruv so'zlari - fan/tabiat/koinot mavzusiga mos, "vau-effekt" beruvchi fon videolar
+BACKGROUND_THEMES = [
+    "space galaxy stars",
+    "ocean underwater deep",
+    "wildlife animals nature",
+    "aurora borealis northern lights",
+    "microscope science lab",
+    "planet earth from space",
+    "rainforest jungle aerial",
+    "volcano lava nature",
+    "desert dunes aerial",
+    "coral reef underwater",
 ]
 
 
-def load_quotes():
-    with open(QUOTES_FILE, "r", encoding="utf-8") as f:
+def load_facts():
+    with open(FACTS_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -52,46 +65,78 @@ def save_state(state):
         json.dump(state, f, ensure_ascii=False, indent=2)
 
 
-def pick_quote(quotes, state):
+def pick_fact(facts, state):
     used = set(state.get("used_indices", []))
-    remaining = [i for i in range(len(quotes)) if i not in used]
+    remaining = [i for i in range(len(facts)) if i not in used]
     if not remaining:
-        # Barcha iqtiboslar ishlatilgan - qaytadan boshlaymiz
         used = set()
-        remaining = list(range(len(quotes)))
+        remaining = list(range(len(facts)))
     idx = random.choice(remaining)
     used.add(idx)
     state["used_indices"] = list(used)
     state["last_run"] = datetime.utcnow().isoformat()
-    return quotes[idx], state
+    return facts[idx], state
 
 
-def make_gradient(top_color, bottom_color):
-    base = Image.new("RGB", (WIDTH, HEIGHT), top_color)
-    top = Image.new("RGB", (1, HEIGHT), top_color)
-    bottom = Image.new("RGB", (1, HEIGHT), bottom_color)
-    gradient_col = Image.blend(top, bottom, 0)
-    grad = Image.new("RGB", (1, HEIGHT))
-    for y in range(HEIGHT):
-        t = y / HEIGHT
-        r = int(top_color[0] * (1 - t) + bottom_color[0] * t)
-        g = int(top_color[1] * (1 - t) + bottom_color[1] * t)
-        b = int(top_color[2] * (1 - t) + bottom_color[2] * t)
-        grad.putpixel((0, y), (r, g, b))
-    return grad.resize((WIDTH, HEIGHT))
+def generate_speech(fact_text, out_path):
+    import edge_tts
+
+    voice = random.choice(VOICES)
+    spoken_text = f"Bilasizmi?... {fact_text}"
+
+    async def _run():
+        communicate = edge_tts.Communicate(spoken_text, voice, rate="-5%")
+        await communicate.save(out_path)
+
+    asyncio.run(_run())
+    print(f"Ovoz yaratildi ({voice}): {out_path}")
+    return voice
 
 
-def add_texture(img):
-    # Yengil noise/vignette effekti bilan chuqurlik qo'shamiz
-    overlay = Image.new("L", (WIDTH, HEIGHT), 0)
-    draw = ImageDraw.Draw(overlay)
-    for i in range(0, 260, 4):
-        alpha = int(140 * (i / 260))
-        draw.rectangle([i, i, WIDTH - i, HEIGHT - i], outline=alpha)
-    overlay = overlay.filter(ImageFilter.GaussianBlur(80))
-    black = Image.new("RGB", (WIDTH, HEIGHT), (0, 0, 0))
-    img = Image.composite(black, img, overlay.point(lambda p: int(p * 0.55)))
-    return img
+def get_audio_duration(path):
+    result = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-show_entries", "format=duration", "-of", "csv=p=0", path],
+        capture_output=True, text=True, check=True,
+    )
+    return float(result.stdout.strip())
+
+
+def fetch_background_video(out_path):
+    api_key = os.environ.get("PEXELS_API_KEY")
+    if not api_key:
+        print("OGOHLANTIRISH: PEXELS_API_KEY topilmadi, gradient fon ishlatiladi.")
+        return None
+
+    theme = random.choice(BACKGROUND_THEMES)
+    url = "https://api.pexels.com/videos/search"
+    headers = {"Authorization": api_key}
+    params = {"query": theme, "orientation": "portrait", "per_page": 15, "size": "medium"}
+
+    try:
+        resp = requests.get(url, headers=headers, params=params, timeout=30)
+        resp.raise_for_status()
+        videos = resp.json().get("videos", [])
+        if not videos:
+            print(f"Pexels'da '{theme}' uchun natija topilmadi, gradient fon ishlatiladi.")
+            return None
+
+        video = random.choice(videos)
+        files = sorted(
+            video["video_files"],
+            key=lambda f: abs((f.get("width") or 0) - WIDTH),
+        )
+        best = next((f for f in files if (f.get("height") or 0) > (f.get("width") or 0)), files[0])
+
+        video_resp = requests.get(best["link"], timeout=60)
+        video_resp.raise_for_status()
+        with open(out_path, "wb") as f:
+            f.write(video_resp.content)
+
+        print(f"Fon video yuklandi (mavzu: '{theme}'): {out_path}")
+        return out_path
+    except Exception as e:
+        print(f"OGOHLANTIRISH: Pexels'dan video yuklab bo'lmadi ({e}), gradient fon ishlatiladi.")
+        return None
 
 
 def wrap_text(draw, text, font, max_width):
@@ -110,88 +155,147 @@ def wrap_text(draw, text, font, max_width):
     return lines
 
 
-def render_frame(quote_text, author):
-    palette = random.choice(PALETTES)
-    img = make_gradient(*palette)
-    img = add_texture(img)
+def render_text_overlay(fact_text):
+    img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    font_size = 78
+    hook_font = ImageFont.truetype(FONT_BOLD, 58)
+    font_size = 68
     font = ImageFont.truetype(FONT_BOLD, font_size)
     max_width = WIDTH - 160
 
-    lines = wrap_text(draw, quote_text, font, max_width)
-    while len(lines) > 6 and font_size > 40:
+    lines = wrap_text(draw, fact_text, font, max_width)
+    while len(lines) > 7 and font_size > 40:
         font_size -= 4
         font = ImageFont.truetype(FONT_BOLD, font_size)
-        lines = wrap_text(draw, quote_text, font, max_width)
+        lines = wrap_text(draw, fact_text, font, max_width)
 
     line_height = int(font_size * 1.35)
-    total_h = line_height * len(lines)
-    start_y = (HEIGHT - total_h) // 2 - 60
+    hook_h = 100
+    total_h = hook_h + line_height * len(lines) + 60
+    box_top = (HEIGHT - total_h) // 2 - 60
+    box_bottom = box_top + total_h + 40
 
-    # Yuqori bezak chizig'i
-    draw.line([(WIDTH // 2 - 60, start_y - 70), (WIDTH // 2 + 60, start_y - 70)],
-               fill=(255, 255, 255), width=6)
+    # O'qish qulay bo'lishi uchun matn ortida yarim shaffof qora panel
+    draw.rectangle([(0, box_top - 40), (WIDTH, box_bottom + 40)], fill=(0, 0, 0, 150))
 
+    # "BILASIZMI?" hook - diqqatni tortuvchi sariq belgi
+    hook_text = "BILASIZMI?"
+    hw = draw.textlength(hook_text, font=hook_font)
+    hook_y = box_top
+    # Hook ortida kichik rangli chiziq/badge
+    draw.rounded_rectangle(
+        [(WIDTH // 2 - hw / 2 - 30, hook_y - 12), (WIDTH // 2 + hw / 2 + 30, hook_y + 68)],
+        radius=20, fill=(255, 200, 40, 230),
+    )
+    draw.text((WIDTH // 2 - hw / 2, hook_y), hook_text, font=hook_font, fill=(20, 20, 20, 255))
+
+    start_y = hook_y + hook_h + 20
     for i, line in enumerate(lines):
         w = draw.textlength(line, font=font)
         x = (WIDTH - w) // 2
         y = start_y + i * line_height
-        # Yengil soya
-        draw.text((x + 3, y + 3), line, font=font, fill=(0, 0, 0, 120))
-        draw.text((x, y), line, font=font, fill=(255, 255, 255))
-
-    # Muallif
-    author_font = ImageFont.truetype(FONT_REGULAR, 42)
-    author_text = f"— {author}"
-    w = draw.textlength(author_text, font=author_font)
-    y = start_y + len(lines) * line_height + 40
-    draw.text(((WIDTH - w) // 2, y), author_text, font=author_font, fill=(220, 220, 220))
+        draw.text((x + 3, y + 3), line, font=font, fill=(0, 0, 0, 160))
+        draw.text((x, y), line, font=font, fill=(255, 255, 255, 255))
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    frame_path = os.path.join(OUTPUT_DIR, "frame.png")
-    img.save(frame_path)
-    return frame_path
+    overlay_path = os.path.join(OUTPUT_DIR, "overlay.png")
+    img.save(overlay_path)
+    return overlay_path
 
 
-def build_video(frame_path, duration=8):
-    """ffmpeg zoompan filtri yordamida sekin zoom-in video yaratamiz."""
+def render_gradient_fallback():
+    palette_top, palette_bottom = (20, 24, 38), (64, 43, 110)
+    img = Image.new("RGB", (WIDTH, HEIGHT), palette_top)
+    for y in range(HEIGHT):
+        t = y / HEIGHT
+        r = int(palette_top[0] * (1 - t) + palette_bottom[0] * t)
+        g = int(palette_top[1] * (1 - t) + palette_bottom[1] * t)
+        b = int(palette_top[2] * (1 - t) + palette_bottom[2] * t)
+        for x in range(0, WIDTH, 4):
+            img.putpixel((x, y), (r, g, b))
+    path = os.path.join(OUTPUT_DIR, "fallback_bg.png")
+    img.save(path)
+    return path
+
+
+def compose_video(background_path, overlay_path, audio_path, duration, is_video_bg):
     out_path = os.path.join(OUTPUT_DIR, "video.mp4")
-    fps = 30
-    total_frames = duration * fps
-    filter_str = (
-        f"zoompan=z='min(zoom+0.0007,1.15)':d={total_frames}:s={WIDTH}x{HEIGHT}:fps={fps},"
-        f"fade=t=in:st=0:d=0.6,fade=t=out:st={duration - 0.6}:d=0.6"
-    )
-    cmd = [
-        "ffmpeg", "-y", "-loop", "1", "-i", frame_path,
-        "-vf", filter_str,
-        "-t", str(duration),
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", str(fps),
-        out_path,
-    ]
-    subprocess.run(cmd, check=True, capture_output=True)
+    fade_out_start = max(duration - 0.6, 0)
+
+    if is_video_bg:
+        bg_filter = (
+            f"scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=increase,"
+            f"crop={WIDTH}:{HEIGHT},eq=brightness=-0.04,"
+            f"fade=t=in:st=0:d=0.6,fade=t=out:st={fade_out_start}:d=0.6"
+        )
+        cmd = [
+            "ffmpeg", "-y",
+            "-stream_loop", "-1", "-i", background_path,
+            "-i", overlay_path,
+            "-i", audio_path,
+            "-filter_complex", f"[0:v]{bg_filter}[bg];[bg][1:v]overlay=0:0[v]",
+            "-map", "[v]", "-map", "2:a",
+            "-t", str(duration),
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+            "-c:a", "aac", "-b:a", "128k",
+            out_path,
+        ]
+    else:
+        zoom_filter = (
+            f"zoompan=z='min(zoom+0.0007,1.15)':d={int(duration * 30)}:s={WIDTH}x{HEIGHT}:fps=30,"
+            f"fade=t=in:st=0:d=0.6,fade=t=out:st={fade_out_start}:d=0.6"
+        )
+        cmd = [
+            "ffmpeg", "-y",
+            "-loop", "1", "-i", background_path,
+            "-i", overlay_path,
+            "-i", audio_path,
+            "-filter_complex", f"[0:v]{zoom_filter}[bg];[bg][1:v]overlay=0:0[v]",
+            "-map", "[v]", "-map", "2:a",
+            "-t", str(duration),
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+            "-c:a", "aac", "-b:a", "128k",
+            out_path,
+        ]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print("FFMPEG XATOSI:", result.stderr[-2000:])
+        sys.exit(1)
     return out_path
 
 
 def main():
-    quotes = load_quotes()
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    facts = load_facts()
     state = load_state()
-    quote, state = pick_quote(quotes, state)
+    fact, state = pick_fact(facts, state)
     save_state(state)
 
-    frame_path = render_frame(quote["text"], quote["author"])
-    video_path = build_video(frame_path)
+    audio_path = os.path.join(OUTPUT_DIR, "audio.mp3")
+    generate_speech(fact["text"], audio_path)
+    duration = get_audio_duration(audio_path) + 1.0
+
+    bg_video_path = os.path.join(OUTPUT_DIR, "background.mp4")
+    fetched = fetch_background_video(bg_video_path)
+    is_video_bg = fetched is not None
+    background_path = fetched if fetched else render_gradient_fallback()
+
+    overlay_path = render_text_overlay(fact["text"])
+
+    video_path = compose_video(background_path, overlay_path, audio_path, duration, is_video_bg)
 
     caption = (
-        f"{quote['text']}\n\n— {quote['author']}\n\n"
-        f"#motivatsiya #ozini_rivojlantirish #maqsad #ilhom #kunlikmotivatsiya"
+        f"🤯 Bilasizmi?\n\n{fact['text']}\n\n"
+        f"Sizga qaysi fakt yoqdi? Izohda yozing! 👇\n\n"
+        f"#qiziqarlifaktlar #bilasizmi #fakt #ilm #dunyo #tabiat #fan #qiziqarli"
     )
     with open(os.path.join(OUTPUT_DIR, "caption.txt"), "w", encoding="utf-8") as f:
         f.write(caption)
 
-    print(f"Video tayyor: {video_path}")
+    print(f"Video tayyor: {video_path} (davomiyligi: {duration:.1f}s)")
     print(f"Caption:\n{caption}")
 
 
