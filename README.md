@@ -13,8 +13,9 @@ Bu tizim **har kuni o'zi**:
 
 - Instagram post qilish uchun **Business yoki Creator akkaunt** (shaxsiy oddiy akkaunt emas) va **Facebook Page**ga ulangan bo'lishi shart — bu Meta talabi, uni chetlab o'tib bo'lmaydi.
 - Video generatsiya **pullik AI orqali emas**, balki matn+fon+zoom effekti orqali yaratiladi (siz tanlagan variant).
-- Video omborida saqlash uchun **Cloudinary** (bepul reja yetarli) ishlatiladi, chunki Instagram video faylni faqat ochiq URL orqali qabul qiladi.
-- Iqtiboslar ro'yxati `quotes.json` faylida — xohlagancha qo'shishingiz, o'chirishingiz mumkin.
+- Video Instagram'ga yuborilishi uchun ochiq (public) URL kerak. Buning uchun uchinchi tomon xizmati (Cloudinary va h.k.) shart emas — video repozitoriyaning o'zidagi alohida `media` branch'ida saqlanadi va `raw.githubusercontent.com` orqali ochiq havola olinadi. **Shu sababli repozitoriya oxir-oqibat Public (ochiq) qilinishi kerak** — bu xavfsiz, chunki GitHub Secrets (tokenlar) public repoda ham hech kimga ko'rinmaydi, faqat kod va videolar ko'rinadi.
+- Iqtiboslar o'rniga endi **qiziqarli faktlar** ishlatiladi (`facts.json`) — xohlagancha qo'shishingiz, o'chirishingiz mumkin.
+- Video endi **ovozli** (o'zbekcha tabiiy TTS diktor ovozi, Microsoft Edge TTS orqali, bepul) va **real fon footage** bilan (Pexels'dan, mavzuga mos: koinot, okean, tabiat va h.k.) — statik gradient endi faqat zaxira (fallback) sifatida ishlatiladi.
 
 ---
 
@@ -36,11 +37,16 @@ git push -u origin main
 
 ---
 
-## 2-qadam: Cloudinary sozlash (video hostingi, bepul)
+## 2-qadam: Repozitoriyani Public (ochiq) qilish
 
-1. [cloudinary.com](https://cloudinary.com) da bepul hisob oching
-2. Dashboard'da **Cloud name** ni ko'chirib oling
-3. Settings → Upload → **Add upload preset** → Signing mode: **Unsigned** qilib saqlang, preset nomini eslab qoling
+Video ochiq URL orqali Instagram'ga yuborilishi uchun repo public bo'lishi kerak:
+
+1. Repozitoriyangizda **Settings** ga o'ting
+2. Pastga tushib, **"Danger Zone"** bo'limini toping
+3. **"Change visibility"** → **"Change to public"** ni tanlang
+4. Tasdiqlash uchun repo nomini yozib kiriting
+
+> 🔒 Xavotir olmang: **Secrets (tokenlar) hech qachon ko'rinmaydi**, hatto public repolarda ham — ular alohida shifrlangan joyda saqlanadi. Faqat kod, iqtiboslar va yaratilgan videolar ko'rinadi.
 
 ---
 
@@ -76,18 +82,28 @@ Bu qadam biroz uzunroq, lekin bir marta qilinadi:
 
 ---
 
+## 3.5-qadam: Pexels API kaliti olish (fon videolar uchun, bepul)
+
+1. [pexels.com/api](https://www.pexels.com/api/) ga o'ting
+2. **"Get Started"** orqali bepul ro'yxatdan o'ting (email bilan)
+3. Tasdiqlagach, sizga darhol **API kalit** beriladi (dashboard'da ko'rinadi)
+4. Uni nusxalab saqlang — bu `PEXELS_API_KEY` bo'ladi
+
+> Agar bu kalit sozlanmasa yoki ishlamasa, tizim avtomatik ravishda oddiy gradient fonga qaytadi (video baribir ovoz bilan ishlaydi, faqat fon real footage o'rniga rangli bo'ladi).
+
+---
+
 ## 4-qadam: GitHub Secrets qo'shish
 
 Repozitoriyangizda: **Settings → Secrets and variables → Actions → New repository secret**
 
-Quyidagi 4 ta maxfiy o'zgaruvchini qo'shing:
+Quyidagi 3 ta maxfiy o'zgaruvchini qo'shing:
 
 | Nomi | Qiymati |
 |---|---|
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
-| `CLOUDINARY_UPLOAD_PRESET` | Cloudinary unsigned preset nomi |
 | `IG_ACCESS_TOKEN` | Uzoq muddatli Instagram/Facebook token |
 | `IG_USER_ID` | Instagram Business Account ID |
+| `PEXELS_API_KEY` | Pexels'dan olingan bepul API kalit |
 
 ---
 
@@ -113,7 +129,7 @@ Loglarni kuzatib boring — xatolik bo'lsa, aynan qaysi qadamda ekanini ko'rsata
 
 ```
 motivbot/
-├── quotes.json              # Iqtiboslar bazasi (xohlagancha qo'shing)
+├── facts.json                # Qiziqarli faktlar bazasi (xohlagancha qo'shing)
 ├── generate_video.py        # Video yaratish skripti
 ├── upload_and_post.py        # Cloudinary + Instagram'ga joylash
 ├── state.json                # Qaysi iqtiboslar ishlatilganini eslab qoladi
@@ -125,7 +141,7 @@ motivbot/
 
 ## Nimalarni o'zingiz sozlashingiz mumkin
 
-- **`quotes.json`** — o'z iqtiboslaringizni qo'shing
+- **`facts.json`** — o'z faktlaringizni qo'shing
 - **`PALETTES`** (`generate_video.py` ichida) — fon ranglarini o'zgartiring
 - **Caption/hashtag** — `main()` funksiyasidagi shablonni tahrirlang
 - **Video davomiyligi** — `build_video(frame_path, duration=8)` dagi raqamni o'zgartiring
@@ -133,5 +149,5 @@ motivbot/
 ## Cheklovlar (halol ogohlantirish)
 
 - Instagram token muddati tugasa, post to'xtaydi — uni qayta yangilash kerak
-- Cloudinary bepul rejasida oylik trafik chegarasi bor (odatda 25GB/oy — kunlik bitta qisqa video uchun yetarli)
+- Repozitoriya **Public** bo'lgani uchun kod, iqtiboslar va videolar hamma uchun ko'rinadi (tokenlar esa yashirin qoladi)
 - Meta har qanday avtomatlashtirilgan akkauntni bir xil qoliplar bilan haddan tashqari faol ishlatilsa, spam sifatida belgilashi mumkin — shuning uchun kuniga 1 tadan ortiq post joylashtirmang
