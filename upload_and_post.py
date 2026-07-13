@@ -22,7 +22,11 @@ import time
 
 import requests
 
+# MUHIM: "Instagram API with Instagram Login" orqali olingan (IGAA... bilan
+# boshlanadigan) tokenlar uchun so'rovlar graph.facebook.com EMAS,
+# graph.instagram.com orqali yuborilishi shart.
 GRAPH_API_VERSION = "v21.0"
+GRAPH_HOST = "https://graph.instagram.com"
 
 
 def env(name):
@@ -33,10 +37,18 @@ def env(name):
     return val
 
 
+def check(resp):
+    """Javobni tekshiradi, xato bo'lsa Instagram'ning aniq xato matnini chiqaradi."""
+    if not resp.ok:
+        print(f"XATO JAVOB (status {resp.status_code}): {resp.text}")
+    resp.raise_for_status()
+    return resp
+
+
 def create_media_container(video_url, caption):
     ig_user_id = env("IG_USER_ID")
     token = env("IG_ACCESS_TOKEN")
-    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{ig_user_id}/media"
+    url = f"{GRAPH_HOST}/{GRAPH_API_VERSION}/{ig_user_id}/media"
     params = {
         "media_type": "REELS",
         "video_url": video_url,
@@ -44,7 +56,7 @@ def create_media_container(video_url, caption):
         "access_token": token,
     }
     resp = requests.post(url, data=params, timeout=60)
-    resp.raise_for_status()
+    check(resp)
     creation_id = resp.json()["id"]
     print(f"Media konteyner yaratildi: {creation_id}")
     return creation_id
@@ -52,11 +64,11 @@ def create_media_container(video_url, caption):
 
 def wait_until_ready(creation_id, timeout=300, interval=10):
     token = env("IG_ACCESS_TOKEN")
-    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{creation_id}"
+    url = f"{GRAPH_HOST}/{GRAPH_API_VERSION}/{creation_id}"
     elapsed = 0
     while elapsed < timeout:
         resp = requests.get(url, params={"fields": "status_code", "access_token": token})
-        resp.raise_for_status()
+        check(resp)
         status = resp.json().get("status_code")
         print(f"Holat: {status}")
         if status == "FINISHED":
@@ -71,10 +83,10 @@ def wait_until_ready(creation_id, timeout=300, interval=10):
 def publish_media(creation_id):
     ig_user_id = env("IG_USER_ID")
     token = env("IG_ACCESS_TOKEN")
-    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{ig_user_id}/media_publish"
+    url = f"{GRAPH_HOST}/{GRAPH_API_VERSION}/{ig_user_id}/media_publish"
     params = {"creation_id": creation_id, "access_token": token}
     resp = requests.post(url, data=params, timeout=60)
-    resp.raise_for_status()
+    check(resp)
     post_id = resp.json()["id"]
     print(f"E'lon qilindi! Post ID: {post_id}")
     return post_id
