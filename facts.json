@@ -1,32 +1,252 @@
 [
-  {"text": "Ahtapotning uchta yuragi bor - ikkitasi jabralarga qon haydaydi, bittasi esa butun tanaga."},
-  {"text": "Bal hech qachon buzilmaydi. Qadimgi Misr qabrlaridan topilgan 3000 yillik bal hali ham yeb bo'ladigan holatda edi."},
-  {"text": "Venera sayyorasida bir kun bir yildan uzoqroq davom etadi - u o'z o'qi atrofida juda sekin aylanadi."},
-  {"text": "Banan haqiqatda meva emas, balki botanik jihatdan rezavor hisoblanadi, ajablanarlisi - qulupnay esa rezavor emas."},
-  {"text": "Inson miyasi tanadagi energiyaning taxminan 20 foizini iste'mol qiladi, garchi og'irligi tananing atigi 2 foizini tashkil etsa ham."},
-  {"text": "Muzlik davridan qolgan mamontlar hali ham muzliklar ostida deyarli butun holatda saqlanib qolmoqda."},
-  {"text": "Sakkizoyoqlarning qoni ko'k rangda - chunki ularning qonida temir o'rniga mis birikmasi bor."},
-  {"text": "Quyosh sistema massasining 99.86 foizini o'z ichiga oladi - qolgan hamma narsa - sayyoralar, oylar, asteroidlar - atigi 0.14 foiz."},
-  {"text": "Eyfel minorasi issiq havoda 15 santimetrgacha o'sadi - metall qizib kengayadi."},
-  {"text": "Delfinlar bir-birlariga o'ziga xos nom - individual tovush signali orqali murojaat qilishadi."},
-  {"text": "Antarktidada yomg'ir deyarli yog'maydi - u dunyodagi eng katta cho'l hisoblanadi, garchi muzdan iborat bo'lsa ham."},
-  {"text": "Inson DNKsining taxminan 60 foizi banan DNKsi bilan bir xil."},
-  {"text": "Yer yadrosi Quyosh yuzasi kabi issiq - taxminan 5500 gradus Selsiy."},
-  {"text": "Qutb ayiqlarining terisi qora, faqat mo'ynasi shaffof ko'rinadi va yorug'likni aks ettirib oq bo'lib tuyuladi."},
-  {"text": "Bir kishi umrida o'rtacha 6 ta boshqa odamga o'xshab ketadi - genetik jihatdan tasodifiy o'xshashlik."},
-  {"text": "Yaponiyada 5 mingdan ortiq orol bor, lekin ularning atigi 430 tasi doimiy aholi yashaydigan hisoblanadi."},
-  {"text": "Chumolilar hech qachon uxlamaydi, lekin ular kuniga bir necha marta qisqa mikro-uyqu holatiga tushishadi."},
-  {"text": "Eng katta tirik organizm - bu Amerika shtati Oregondagi bitta zamburug' tarmog'i, u 965 gektar maydonni egallagan."},
-  {"text": "Momaqaldiroq paytida chaqmoq quyosh yuzasidan besh baravar issiqroq bo'lishi mumkin."},
-  {"text": "Kенгуруlar orqaga qarab yura olmaydi - dumi va oyoq tuzilishi buni imkonsiz qiladi."},
-  {"text": "Dunyodagi eng chuqur okean joyi - Marian botiqligi - Everest tog'ini ag'darib tashlasa ham hali suv ostida qoladi."},
-  {"text": "Bitta bulut o'rtacha 500 tonnadan ortiq suv tomchisini o'z ichiga olishi mumkin, lekin baribir havoda suzib yuradi."},
-  {"text": "Odam tili barmoq izi kabi noyob - hech ikki kishida bir xil til izi bo'lmaydi."},
-  {"text": "Saturn sayyorasi shunchalik yengilki, agar uni katta okeanga tashlasa, u cho'kmasdan suzib yuradi."},
-  {"text": "Bir chaqmoq zarbasi 30 ming gradus Selsiygacha issiqlik hosil qiladi - bu Quyosh yuzasidan olti baravar issiqroq."},
-  {"text": "Karak dengizida cho'kib ketish deyarli mumkin emas - suvning sho'rligi tanani yuzada tutib turadi."},
-  {"text": "Ayrim meduzalar biologik jihatdan o'lmasdir - ular hujayralarini qayta yoshartirib, cheksiz yashashi mumkin."},
-  {"text": "Bir kishi yiliga o'rtacha 8 marta o'z uyida o'rgimchakni yutib yuboradi - deb aytiladi, lekin bu shahar afsonasi, ilmiy asosi yo'q."},
-  {"text": "Yer sayyorasi mukammal doira emas - u ekvator atrofida biroz kengroq, qutblarda esa yassiroq shakldadir."},
-  {"text": "Zumrad ajdaho baliqlari 100 yildan ortiq umr ko'rishi mumkin va deyarli qarimaydi."}
+  {
+    "hook": "Kleopatra bilan piramidalar bir davrda yashagan deb o'ylaysizmi?",
+    "reveal": "Yo'q, aslida Kleopatra Buyuk piramida qurilishidan 2500 yil KEYIN yashagan, va u Oyga birinchi qadam qo'yilgan kundan atigi 2000 yil oldin dunyoda bo'lgan. Ya'ni Kleopatra piramidalardan ko'ra Oyga uchishga yaqinroq davrda yashagan.",
+    "theme": "egypt pyramids ancient desert"
+  },
+  {
+    "hook": "Sizningcha, Oksford universiteti bilan Ацтек imperiyasidan qaysi biri ilgariroq paydo bo'lgan?",
+    "reveal": "Ishonmaysiz, lekin Oksford universitetida 1096-yildayoq dars berila boshlagan, Ацтек imperiyasi esa faqat 1428-yilda tashkil topgan. Ya'ni Oksford Ацтеклардан 300 yildan ko'proq katta ekan.",
+    "theme": "oxford university old buildings"
+  },
+  {
+    "hook": "Neptun sayyorasida qanday yomg'ir yog'ishi mumkinligini bilasizmi?",
+    "reveal": "Olimlarning hisob-kitobiga ko'ra, Neptun va Uran sayyoralarining chuqurligida bosim shu qadar kattaki, uglerod siqilib - olmosga aylanadi va sayyora ichkarisida haqiqiy olmos yomg'iri yog'adi.",
+    "theme": "neptune uranus planet space blue"
+  },
+  {
+    "hook": "Shaxmatda nechta xil o'yin variantini o'ynash mumkinligini tasavvur qila olasizmi?",
+    "reveal": "Olimlarning hisobiga ko'ra, mumkin bo'lgan shaxmat partiyalari soni koinotdagi barcha atomlar sonidan ham ko'proq. Ya'ni shaxmat taxtasi cheksizlikka yaqin imkoniyatlar dengizi ekan.",
+    "theme": "chess board game pieces"
+  },
+  {
+    "hook": "Banan yeganingizda sizga nima bo'lishini bilasizmi?",
+    "reveal": "Aslida banan tarkibida tabiiy radioaktiv modda bor - lekin xavotir olmang, zararli bo'lishi uchun bir o'tirishda 10 million banan yeyishingiz kerak bo'lardi.",
+    "theme": "banana fruit yellow closeup"
+  },
+  {
+    "hook": "Vombat hayvonining najasi qanday shaklda bo'lishini bilasizmi?",
+    "reveal": "Kub shaklida! Dunyoda faqat vombat kub shaklidagi najas chiqaradigan yagona hayvon, va olimlar buning sababini 2021-yilda ilmiy mukofot olguncha tushunolmagan edi.",
+    "theme": "wombat australia animal"
+  },
+  {
+    "hook": "Tarixdagi eng qisqa urush qancha davom etganini bilasizmi?",
+    "reveal": "Bor-yo'g'i 38 daqiqa! 1896-yilda Angliya va Zanzibar o'rtasidagi urush shu qadar tez tugaganki, u rasmiy ravishda dunyodagi eng qisqa urush sifatida qayd etilgan.",
+    "theme": "old ship harbor historical"
+  },
+  {
+    "hook": "Shotlandiyaning rasmiy davlat hayvoni qaysi ekanini taxmin qiling-chi?",
+    "reveal": "Yolg'iz shoxli ot - yakkashox (единорог)! Ha, xayoliy jonzot Shotlandiyaning rasmiy milliy ramzi hisoblanadi, va bu VI asrdan beri davom etib kelayotgan an'ana.",
+    "theme": "scotland castle highlands"
+  },
+  {
+    "hook": "Akulalar bilan daraxtlardan qaysi biri Yerda ilgariroq paydo bo'lgan, deb o'ylaysiz?",
+    "reveal": "Akulalar! Ular taxminan 400 million yil oldin paydo bo'lgan, daraxtlar esa atigi 350 million yil oldin. Ya'ni akulalar daraxtlardan 50 million yil katta ekan.",
+    "theme": "shark ocean swimming"
+  },
+  {
+    "hook": "Kosmosning o'zi qanday hidga ega bo'lishini bilasizmi?",
+    "reveal": "Astronavtlarning aytishicha, kosmoslik skafandrga qaytganda u kuygan go'sht yoki payvandlash hidiga o'xshab ketadi - buni koinotning o'zi emas, balki quyosh nurlari bilan reaksiyaga kirishgan zarrachalar hidi deb tushuntirishadi.",
+    "theme": "astronaut space station"
+  },
+  {
+    "hook": "Hozir burningizni siqib, xirillab (ta'ziya) kuylashga urinib ko'ring - chiqadimi?",
+    "reveal": "Chiqmaydi! Chunki xirillab kuylash uchun havo aynan burun orqali chiqishi kerak - og'iz yopiq bo'lgani uchun boshqa yo'l yo'q. Buni hozir sinab ko'rgan bo'lsangiz, siz ham ilmiy tajriba o'tkazdingiz.",
+    "theme": "person face closeup portrait"
+  },
+  {
+    "hook": "Sigirlar do'st tutinishini bilasizmi?",
+    "reveal": "Ha! Ilmiy tadqiqotlar shuni ko'rsatdiki, sigirlar o'zlariga yaqin bo'lgan boshqa sigirlar bilan haqiqiy do'stlik o'rnatadi va ular bir-biridan ajratilganda stress darajasi sezilarli darajada oshadi.",
+    "theme": "cows farm field grazing"
+  },
+  {
+    "hook": "Nil Armstrong vafot etganda oilasi odamlardan g'alati narsani so'ragan, bilasizmi?",
+    "reveal": "Ular butun dunyo odamlaridan uni eslash uchun tunda osmonga, Oyga qarab ko'z qisib qo'yishni so'rashgan - chunki u birinchi bo'lib o'sha yerga qadam qo'ygan inson edi.",
+    "theme": "moon night sky full moon"
+  },
+  {
+    "hook": "Kapalaklar taomni qanday his qilishini bilasizmi?",
+    "reveal": "Ular taomni tili bilan emas - oyoqlari bilan totib ko'rishadi! Kapalak biror gulga qo'nishi bilan, oyoqlaridagi retseptorlar orqali shirin yoki achchiqligini darhol biladi.",
+    "theme": "butterfly flower macro"
+  },
+  {
+    "hook": "Qaysi sayyorada bir kun bir yildan uzoq davom etishini bilasizmi?",
+    "reveal": "Venerada! Uning o'z o'qi atrofida bir marta aylanishi (bir kuni) 243 Yer kuniga teng, Quyosh atrofida bir marta aylanishi (bir yili) esa atigi 225 kun - ya'ni u yerda kun yildan uzunroq.",
+    "theme": "venus planet space"
+  },
+  {
+    "hook": "Karak dengizida cho'kib ketish mumkinmi, deb o'ylaysiz?",
+    "reveal": "Deyarli imkonsiz! Suvning sho'rligi shunchalik yuqoriki, siz avtomatik ravishda suv betida erkin yotib qolasiz - cho'kishni istasangiz ham qiynalasiz.",
+    "theme": "dead sea floating salt water"
+  },
+  {
+    "hook": "Dunyoda umuman o'lmaydigan jonzot bormi, deb o'ylaysiz?",
+    "reveal": "Bor ekan! Bir turdagi meduza o'z hujayralarini qayta yoshartira oladi va nazariy jihatdan cheksiz yashashi mumkin - olimlar buni abadiy meduza deb atashadi.",
+    "theme": "jellyfish underwater glowing"
+  },
+  {
+    "hook": "Kenguru orqasiga qarab yura oladimi, deb o'ylaysiz?",
+    "reveal": "Yo'q, umuman yura olmaydi! Buning sababi uning dumi va oyoq tuzilishi - bu jismoniy jihatdan unga imkon bermaydi. Faqat oldinga.",
+    "theme": "kangaroo jumping australia"
+  },
+  {
+    "hook": "Frisbi (uchar likopcha) qanday ixtiro qilinganini bilasizmi?",
+    "reveal": "Uning ixtirochisi Uolter Morrison vafot etganda, o'zining vasiyatiga ko'ra kuli haqiqiy frisbilar tarkibiga qo'shib, do'stlariga tarqatilgan - u o'limidan keyin ham uchishda davom etgan.",
+    "theme": "beach frisbee sunset outdoor"
+  },
+  {
+    "hook": "Yaponiyada nechta orol borligini bilasizmi?",
+    "reveal": "5 mingdan ortiq! Lekin ularning atigi 430 tasida odamlar yashaydi - qolganlari hozircha bo'm-bo'sh turibdi.",
+    "theme": "japan islands aerial coastline"
+  },
+  {
+    "hook": "Bitta chaqmoq zarbasi qanchalik issiq bo'lishi mumkinligini bilasizmi?",
+    "reveal": "30 ming gradusgacha! Bu Quyosh yuzasidan olti barobar issiqroq degani. Bir lahzalik chaqmoq shunchalik kuchli energiya tashiydi.",
+    "theme": "lightning storm thunder night"
+  },
+  {
+    "hook": "Ari chaqqanidan keyin o'lib qoladi, degan gap hammasiga tegishlimi?",
+    "reveal": "Yo'q, faqat asalarilarga! Ularning nishi ilmoqli bo'lgani uchun terida qolib ketadi, va chaqqanda ichki a'zolari birga yirtilib chiqadi. Boshqa ari turlari esa xohlagancha chaqishi mumkin.",
+    "theme": "bee flower pollen macro"
+  },
+  {
+    "hook": "Dunyodagi eng tezkor jonzot qaysi biri, deb o'ylaysiz? Gepard emas!",
+    "reveal": "Bu - qorong'i qanotli lochin. Sho'ng'iganda tezligi soatiga 390 kilometrga yetadi - quruqlikda yashaydigan hech bir jonzot bunga yetolmaydi.",
+    "theme": "falcon bird flying fast"
+  },
+  {
+    "hook": "Okeanning eng chuqur joyi qanchalik chuqurligini tasavvur qila olasizmi?",
+    "reveal": "Everest tog'ini o'sha chuqurlikka - Marian botig'iga - tashlab yuborsangiz ham, cho'qqisi hali suv ostida 2 kilometr qoladi. Shuncha chuqur ekan bu joy.",
+    "theme": "deep ocean underwater dark"
+  },
+  {
+    "hook": "Nega momaqaldiroqda avval chaqmoqni ko'rib, keyin gumburlashni eshitamiz, deb o'ylaysiz?",
+    "reveal": "Sababi oddiy - yorug'lik tovushdan million marta tezroq harakatlanadi. Shuning uchun ko'zimiz avval ko'radi, quloqimiz keyinroq eshitadi.",
+    "theme": "thunderstorm clouds lightning sky"
+  },
+  {
+    "hook": "Yer yuzidagi eng katta jonzot qaysi biri ekan, deb o'ylaysiz? Kit emas!",
+    "reveal": "Bu - Amerikaning Oregon shtatida yer ostida yashiringan bitta zamburug'. Uning tarmoqlari 965 gektar joyni egallagan va u minglab yildan beri o'sib kelmoqda.",
+    "theme": "forest mushroom fungus ground"
+  },
+  {
+    "hook": "Xitoyning Buyuk devori kosmosdan ko'zga ko'rinadi degan gapni eshitgansiz, to'g'rimi?",
+    "reveal": "Aslida bu - afsona! Kosmosga uchgan astronavtlarning aksariyati buni oddiy ko'z bilan kosmosdan ko'rish imkonsiz ekanini tasdiqlagan. Devor uzun, lekin juda tor - baland orbitadan sezilmaydi.",
+    "theme": "great wall china aerial"
+  },
+  {
+    "hook": "Sizningcha, jirafaning bo'ynida odamnikiga qaraganda necha marta ko'p umurtqa suyagi bor?",
+    "reveal": "Ishonmaysiz, lekin ikkalasida ham aynan 7 tadan bo'yin umurtqasi bor! Farq faqat shundaki, jirafada har bir umurtqa juda uzun, odamda esa qisqa.",
+    "theme": "giraffe africa savanna"
+  },
+  {
+    "hook": "Dunyodagi eng qadimgi saqich necha yoshda ekanini taxmin qiling-chi?",
+    "reveal": "Shvetsiyadan qarag'ay smolasidan yasalgan, tishlangan izlari bor saqich topilgan - uning yoshi 9000 yildan oshadi! Qadimgi odamlar ham saqich chaynashni yaxshi ko'rishgan ekan.",
+    "theme": "forest pine trees nature"
+  },
+  {
+    "hook": "Issiq suv sovuq suvdan tezroq muzlashi mumkinmi, deb o'ylaysiz?",
+    "reveal": "Ba'zi holatlarda - ha! Bu hodisa \"Mpemba effekti\" deb ataladi va olimlar hali uning aniq sababini to'liq tushuntira olishmagan, garchi buni Aristotel davridanoq kuzatishgan bo'lsa ham.",
+    "theme": "ice water freezing closeup"
+  },
+  {
+    "hook": "Dunyodagi eng qisqa aviareys parvozi qancha davom etishini bilasizmi?",
+    "reveal": "Bor-yo'g'i 90 soniya! Shotlandiyada ikkita kichik orol o'rtasidagi parvoz shu qadar qisqaki, ba'zida samolyot havoga ko'tarilib, tushishi orasida bir daqiqa ham o'tmaydi.",
+    "theme": "small airplane island scotland"
+  },
+  {
+    "hook": "Bitta chaqmoq bir joyga ikki marta urishi mumkin emas, degan gapni eshitgansiz, to'g'rimi?",
+    "reveal": "Bu ham afsona! Nyu-Yorkdagi Empire State binosiga yiliga o'rtacha 25 marta chaqmoq uradi - baland joylar chaqmoqni doimiy ravishda o'ziga tortadi.",
+    "theme": "lightning skyscraper city night"
+  },
+  {
+    "hook": "Wi-Fi so'zi qanday ma'noni anglatishini bilasizmi?",
+    "reveal": "Hech qanday! Ko'pchilik Wireless Fidelity deb o'ylaydi, lekin bu shunchaki chiroyli eshitiladigan brend nomi sifatida o'ylab topilgan - texnik jihatdan hech narsani anglatmaydi.",
+    "theme": "wifi technology network signal"
+  },
+  {
+    "hook": "AQSh Oliy sudi binosining tepa qavatida nima borligini bilasizmi?",
+    "reveal": "Basketbol maydonchasi! Uni hazil bilan Mamlakatdagi eng baland sud deb atashadi - sudyalar ish orasida shu yerda basketbol o'ynab dam olishgan.",
+    "theme": "basketball court indoor"
+  },
+  {
+    "hook": "Mushuklar shirinlikni his qila oladimi, deb o'ylaysiz?",
+    "reveal": "Yo'q, umuman his qilolmaydi! Ularda shirinlikni sezadigan retseptor geni tug'ilishdanoq yo'q - shuning uchun mushuk hech qachon shokoladga qiziqib qaramaydi.",
+    "theme": "cat closeup face"
+  },
+  {
+    "hook": "Yer yuzidagi barcha chumolilarning umumiy og'irligi qanchaga teng deb o'ylaysiz?",
+    "reveal": "Taxminan Yerdagi barcha odamlarning umumiy og'irligiga teng! Ular kichkina ko'rinsa-da, sonlari shu qadar ko'pki, jami og'irlikda bizga tenglashadi.",
+    "theme": "ants macro closeup ground"
+  },
+  {
+    "hook": "Saudiya Arabistoni tuyalarni qayerdan sotib olishini bilasizmi?",
+    "reveal": "Avstraliyadan! Avstraliyada 19-asrda olib kelingan tuyalar shu qadar ko'payib ketganki, hozir ularni yovvoyi holda ovlab, hatto Yaqin Sharqqa qaytarib sotishadi.",
+    "theme": "camel desert australia"
+  },
+  {
+    "hook": "Qisqichbaqaning yuragi qayerda joylashganini bilasizmi?",
+    "reveal": "Boshida! Qisqichbaqalarning yuragi ko'krak qismida emas, balki bosh qismida joylashgan - anatomiyasi biznikidan butunlay farq qiladi.",
+    "theme": "shrimp underwater sea"
+  },
+  {
+    "hook": "Eyfel minorasining tepasida nima borligini bilasizmi?",
+    "reveal": "Yashirin kichik xonadon! Uni qurgan muhandis Gustav Eyfel o'zi uchun maxsus mehmonlarni kutib oladigan shaxsiy xona qurdirgan, u hozir ham saqlanib qolgan.",
+    "theme": "eiffel tower paris top view"
+  },
+  {
+    "hook": "Panda hayvonlari to'dasi qanday nomlanishini bilasizmi?",
+    "reveal": "Uyalganlar to'dasi (embarrassment)! Ingliz tilida hayvon to'dalariga g'alati nomlar berilgan, va pandalar to'dasi aynan shunday chaqiriladi.",
+    "theme": "panda bear china bamboo"
+  },
+  {
+    "hook": "Odamning tirsagini o'zi bilan yalab ko'rish mumkinmi, deb o'ylaysiz?",
+    "reveal": "Deyarli imkonsiz! Qo'lning tuzilishi shunday joylashganki, aksariyat odamlar buni jismonan uddalay olishmaydi - hozir sinab ko'rishingiz mumkin.",
+    "theme": "person arm stretching"
+  },
+  {
+    "hook": "55 Cancri e degan sayyora nimadan tashkil topganini bilasizmi?",
+    "reveal": "Olimlarning hisobiga ko'ra, bu sayyoraning katta qismi toza olmosdan iborat bo'lishi mumkin - uni \"Olmos sayyora\" deb atashadi.",
+    "theme": "exoplanet space diamond"
+  },
+  {
+    "hook": "Uyquga ketishdan oldin paypoq kiyish foydali bo'lishi mumkinmi, deb o'ylaysiz?",
+    "reveal": "Ha! Ilmiy tadqiqotlar shuni ko'rsatadiki, oyoq issiq bo'lganda tomirlar kengayib, tana tezroq uyquga ketadi - shuning uchun paypoqli uxlash uyquni tezlashtiradi.",
+    "theme": "cozy bed feet socks sleep"
+  },
+  {
+    "hook": "Napoleon haqiqatan ham juda past bo'yli bo'lganmi, deb o'ylaysiz?",
+    "reveal": "Yo'q, bu - mashhur afsona! Uning bo'yi o'sha davr fransuz o'lchov birligida hisoblab, ingliz o'lchoviga noto'g'ri o'girilgan - aslida u o'z zamondoshlaridan pastroq emas edi.",
+    "theme": "france historical paris"
+  },
+  {
+    "hook": "Koinotda yulduzlar Yerdagi qum donalaridan ko'pmi, kammi, deb o'ylaysiz?",
+    "reveal": "Olimlarning hisobiga ko'ra, koinotdagi yulduzlar soni Yerning barcha plyajlaridagi qum donalaridan ko'proq - buni tasavvur qilish ham qiyin.",
+    "theme": "night sky stars milky way"
+  },
+  {
+    "hook": "Kofe daraxti aslida qayerdan kelib chiqqanini bilasizmi?",
+    "reveal": "Efiopiyadan! Rivoyatga ko'ra, uni birinchi marta bir cho'pon o'z echkilari kofe donlarini yeb, tunab uxlamay qolganini payqagach kashf etgan.",
+    "theme": "coffee beans plantation farm"
+  },
+  {
+    "hook": "Ayrim baliqlar rangini his-hayajoniga qarab o'zgartira oladimi, deb o'ylaysiz?",
+    "reveal": "Ha! Xameleon baliq deb ataluvchi turlar his-hayajoniga, hatto kayfiyatiga qarab bir necha soniyada butunlay rangini o'zgartirishi mumkin.",
+    "theme": "colorful fish coral reef"
+  },
+  {
+    "hook": "Bitta momiq bulutning shakli necha daqiqada butunlay o'zgarishi mumkinligini bilasizmi?",
+    "reveal": "Ba'zi bulutlar bor-yo'g'i 10 daqiqada butunlay boshqa shaklga aylanadi - shamol va harorat ularni doimiy harakatda ushlab turadi.",
+    "theme": "clouds sky timelapse formation"
+  },
+  {
+    "hook": "Qadimgi Rimda tishlarni oqartirish uchun nima ishlatilganini bilasizmi?",
+    "reveal": "Ishonmaysiz, lekin qadimgi rimliklar tish yuvish uchun inson siydigidagi ammiakdan foydalanishgan - bu haqiqatan ham tishni oqartirgan, garchi hozir dahshatli tuyulsa ham.",
+    "theme": "ancient rome historical statue"
+  },
+  {
+    "hook": "Yerdagi eng baland tog' Everestmi, deb o'ylaysiz?",
+    "reveal": "Dengiz sathidan hisoblasa - ha, lekin agar tog' asosidan cho'qqisigacha o'lchasangiz, Gavayidagi Mauna Kea vulqoni balandroq - uning katta qismi shunchaki okean ostida yashiringan.",
+    "theme": "hawaii volcano mountain"
+  }
 ]
