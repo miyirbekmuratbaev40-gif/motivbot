@@ -52,7 +52,7 @@
   {
     "hook": "Hozir burningizni siqib, xirillab (ta'ziya) kuylashga urinib ko'ring - chiqadimi?",
     "reveal": "Chiqmaydi! Chunki xirillab kuylash uchun havo aynan burun orqali chiqishi kerak - og'iz yopiq bo'lgani uchun boshqa yo'l yo'q. Buni hozir sinab ko'rgan bo'lsangiz, siz ham ilmiy tajriba o'tkazdingiz.",
-    "theme": "person face closeup portrait"
+    "theme": "fingerprint macro closeup"
   },
   {
     "hook": "Sigirlar do'st tutinishini bilasizmi?",
@@ -152,7 +152,7 @@
   {
     "hook": "Dunyodagi eng qisqa aviareys parvozi qancha davom etishini bilasizmi?",
     "reveal": "Bor-yo'g'i 90 soniya! Shotlandiyada ikkita kichik orol o'rtasidagi parvoz shu qadar qisqaki, ba'zida samolyot havoga ko'tarilib, tushishi orasida bir daqiqa ham o'tmaydi.",
-    "theme": "small airplane island scotland"
+    "theme": "airplane flying sky clouds"
   },
   {
     "hook": "Bitta chaqmoq bir joyga ikki marta urishi mumkin emas, degan gapni eshitgansiz, to'g'rimi?",
@@ -162,12 +162,12 @@
   {
     "hook": "Wi-Fi so'zi qanday ma'noni anglatishini bilasizmi?",
     "reveal": "Hech qanday! Ko'pchilik Wireless Fidelity deb o'ylaydi, lekin bu shunchaki chiroyli eshitiladigan brend nomi sifatida o'ylab topilgan - texnik jihatdan hech narsani anglatmaydi.",
-    "theme": "wifi technology network signal"
+    "theme": "city lights technology night"
   },
   {
     "hook": "AQSh Oliy sudi binosining tepa qavatida nima borligini bilasizmi?",
     "reveal": "Basketbol maydonchasi! Uni hazil bilan Mamlakatdagi eng baland sud deb atashadi - sudyalar ish orasida shu yerda basketbol o'ynab dam olishgan.",
-    "theme": "basketball court indoor"
+    "theme": "basketball player dribbling court"
   },
   {
     "hook": "Mushuklar shirinlikni his qila oladimi, deb o'ylaysiz?",
@@ -202,12 +202,12 @@
   {
     "hook": "Odamning tirsagini o'zi bilan yalab ko'rish mumkinmi, deb o'ylaysiz?",
     "reveal": "Deyarli imkonsiz! Qo'lning tuzilishi shunday joylashganki, aksariyat odamlar buni jismonan uddalay olishmaydi - hozir sinab ko'rishingiz mumkin.",
-    "theme": "person arm stretching"
+    "theme": "person stretching yoga outdoor"
   },
   {
     "hook": "55 Cancri e degan sayyora nimadan tashkil topganini bilasizmi?",
     "reveal": "Olimlarning hisobiga ko'ra, bu sayyoraning katta qismi toza olmosdan iborat bo'lishi mumkin - uni \"Olmos sayyora\" deb atashadi.",
-    "theme": "exoplanet space diamond"
+    "theme": "nebula galaxy colorful space"
   },
   {
     "hook": "Uyquga ketishdan oldin paypoq kiyish foydali bo'lishi mumkinmi, deb o'ylaysiz?",
