@@ -98,24 +98,36 @@ def generate_speech_two_part(hook_text, reveal_text):
     import edge_tts
 
     voice = random.choice(VOICES)
-    hook_path = os.path.join(OUTPUT_DIR, "hook.mp3")
-    reveal_path = os.path.join(OUTPUT_DIR, "reveal.mp3")
-    silence_path = os.path.join(OUTPUT_DIR, "silence.mp3")
+    hook_raw = os.path.join(OUTPUT_DIR, "hook_raw.mp3")
+    reveal_raw = os.path.join(OUTPUT_DIR, "reveal_raw.mp3")
+    hook_path = os.path.join(OUTPUT_DIR, "hook.wav")
+    reveal_path = os.path.join(OUTPUT_DIR, "reveal.wav")
+    silence_path = os.path.join(OUTPUT_DIR, "silence.wav")
     combined_path = os.path.join(OUTPUT_DIR, "audio.mp3")
 
     async def _run():
-        await edge_tts.Communicate(hook_text, voice, rate="-3%").save(hook_path)
-        await edge_tts.Communicate(reveal_text, voice, rate="-3%").save(reveal_path)
+        # Rate biroz tabiiyroq eshitilishi uchun -3% dan -1% ga o'zgartirildi -
+        # ortiqcha sekinlashtirish ovozni "cho'zilgan/robot" kabi eshittiradi
+        await edge_tts.Communicate(hook_text, voice, rate="-1%").save(hook_raw)
+        await edge_tts.Communicate(reveal_text, voice, rate="-1%").save(reveal_raw)
 
     asyncio.run(_run())
 
+    # Har bir segmentni bir xil formatga (44.1kHz, mono, PCM WAV) qayta kodlaymiz -
+    # turli MP3 header/bitrate parametrlari concat vaqtida jarangsizlik/click
+    # tovushlarga sabab bo'lishi mumkin edi.
+    for src, dst in [(hook_raw, hook_path), (reveal_raw, reveal_path)]:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", src, "-ar", "44100", "-ac", "1", "-acodec", "pcm_s16le", dst],
+            check=True, capture_output=True,
+        )
+
     subprocess.run(
-        ["ffmpeg", "-y", "-f", "lavfi", "-i", f"anullsrc=r=24000:cl=mono",
-         "-t", str(PAUSE_SECONDS), "-q:a", "9", silence_path],
+        ["ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono",
+         "-t", str(PAUSE_SECONDS), "-acodec", "pcm_s16le", silence_path],
         check=True, capture_output=True,
     )
 
-    # Uchala audio faylni bitta faylga birlashtiramiz (concat demuxer)
     list_path = os.path.join(OUTPUT_DIR, "concat_list.txt")
     with open(list_path, "w") as f:
         f.write(f"file '{os.path.abspath(hook_path)}'\n")
@@ -124,7 +136,7 @@ def generate_speech_two_part(hook_text, reveal_text):
 
     subprocess.run(
         ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path,
-         "-c", "copy", combined_path],
+         "-acodec", "libmp3lame", "-q:a", "2", combined_path],
         check=True, capture_output=True,
     )
 
@@ -139,12 +151,13 @@ def generate_speech_two_part(hook_text, reveal_text):
 # Fon video (Pexels)
 # ---------------------------------------------------------------------------
 
-def fetch_background_video(out_path, theme=None):
+def fetch_background_video(out_path, theme=None, min_duration=6):
     """
     Fon videoni faktning o'z mavzusiga ("theme" maydoni, facts.json'da) mos
     ravishda Pexels'dan qidiradi - shunda fon har doim aytilayotgan gap bilan
-    mantiqan bog'liq bo'ladi (masalan ahtapot haqida gap ketsa - suv ostidagi
-    ahtapot footage, koinot haqida gap ketsa - yulduzlar/sayyoralar footage).
+    mantiqan bog'liq bo'ladi. Bundan tashqari, iloji boricha video kamida
+    "min_duration" soniya davom etadigan klipni tanlaydi - juda qisqa klip
+    tez-tez "loop" bo'lib, sun'iy va zerikarli ko'rinishning oldini olish uchun.
     """
     api_key = os.environ.get("PEXELS_API_KEY")
     if not api_key:
@@ -155,14 +168,13 @@ def fetch_background_video(out_path, theme=None):
         theme = random.choice(FALLBACK_THEMES)
     url = "https://api.pexels.com/videos/search"
     headers = {"Authorization": api_key}
-    params = {"query": theme, "orientation": "portrait", "per_page": 15, "size": "medium"}
+    params = {"query": theme, "orientation": "portrait", "per_page": 25, "size": "medium"}
 
     try:
         resp = requests.get(url, headers=headers, params=params, timeout=30)
         resp.raise_for_status()
         videos = resp.json().get("videos", [])
         if not videos:
-            # Aniq mavzu bo'yicha natija topilmasa, umumiyroq zaxira mavzuni sinaymiz
             fallback_theme = random.choice(FALLBACK_THEMES)
             print(f"Pexels'da '{theme}' uchun natija topilmadi, '{fallback_theme}' bilan sinaymiz.")
             params["query"] = fallback_theme
@@ -173,7 +185,14 @@ def fetch_background_video(out_path, theme=None):
                 print("Zaxira mavzu ham natija bermadi, gradient fon ishlatiladi.")
                 return None
 
-        video = random.choice(videos)
+        # Imkon qadar uzunroq (min_duration dan katta) klip tanlaymiz - qisqa
+        # klip loop qilinganda ko'zga tashlanadigan, zerikarli takrorlanish beradi.
+        long_enough = [v for v in videos if (v.get("duration") or 0) >= min_duration]
+        pool = long_enough if long_enough else videos
+        # Eng uzunlaridan tasodifiy tanlaymiz (faqat bittasini emas)
+        pool_sorted = sorted(pool, key=lambda v: v.get("duration") or 0, reverse=True)
+        video = random.choice(pool_sorted[:5]) if len(pool_sorted) >= 5 else random.choice(pool_sorted)
+
         files = sorted(video["video_files"], key=lambda f: abs((f.get("width") or 0) - WIDTH))
         best = next((f for f in files if (f.get("height") or 0) > (f.get("width") or 0)), files[0])
 
@@ -182,7 +201,8 @@ def fetch_background_video(out_path, theme=None):
         with open(out_path, "wb") as f:
             f.write(video_resp.content)
 
-        print(f"Fon video yuklandi (mavzu: '{theme}'): {out_path}")
+        actual_dur = video.get("duration", "?")
+        print(f"Fon video yuklandi (mavzu: '{theme}', davomiyligi: {actual_dur}s): {out_path}")
         return out_path
     except Exception as e:
         print(f"OGOHLANTIRISH: Pexels'dan video yuklab bo'lmadi ({e}), gradient fon ishlatiladi.")
@@ -328,9 +348,14 @@ def compose_video(background_path, hook_overlay, reveal_overlay, audio_path,
 
     if is_video_bg:
         bg_input = ["-stream_loop", "-1", "-i", background_path]
+        # Video fonga ham sekin zoom qo'shamiz - manba klip harakatsiz/statik
+        # bo'lsa ham, natija ko'zga "jonli" ko'rinishi uchun.
+        big_w, big_h = int(WIDTH * 1.3), int(HEIGHT * 1.3)
         bg_filter = (
-            f"scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=increase,"
-            f"crop={WIDTH}:{HEIGHT},eq=brightness=-0.04,"
+            f"scale={big_w}:{big_h}:force_original_aspect_ratio=increase,"
+            f"crop={big_w}:{big_h},"
+            f"zoompan=z='min(zoom+0.0004,1.1)':d={int(duration * 30)}:s={WIDTH}x{HEIGHT}:fps=30,"
+            f"eq=brightness=-0.04,"
             f"fade=t=in:st=0:d=0.6,fade=t=out:st={fade_out_start}:d=0.6"
         )
     else:
@@ -384,7 +409,7 @@ def main():
     duration = reveal_start + reveal_dur + 1.2  # javobdan keyin "nafas" vaqti
 
     bg_video_path = os.path.join(OUTPUT_DIR, "background.mp4")
-    fetched = fetch_background_video(bg_video_path, theme=fact.get("theme"))
+    fetched = fetch_background_video(bg_video_path, theme=fact.get("theme"), min_duration=duration)
     is_video_bg = fetched is not None
     background_path = fetched if fetched else render_gradient_fallback()
 
