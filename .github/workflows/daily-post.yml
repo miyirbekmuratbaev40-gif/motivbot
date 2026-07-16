@@ -2,9 +2,11 @@ name: Kunlik Instagram post
 
 on:
   schedule:
-    # Kuniga 3 marta, teng oraliqda (Toshkent, UTC+5):
+    # Kuniga 5 marta, teng oraliqda (Toshkent, UTC+5):
     - cron: "0 3 * * *"    # 08:00 (ertalab)
+    - cron: "0 6 * * *"    # 11:00 (tush oldi)
     - cron: "0 9 * * *"    # 14:00 (tushdan keyin)
+    - cron: "0 12 * * *"   # 17:00 (kechga yaqin)
     - cron: "0 15 * * *"   # 20:00 (kechqurun)
   workflow_dispatch: {}   # Qo'lda ham ishga tushirish imkoniyati (Actions bo'limidan)
 
