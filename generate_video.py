@@ -1,15 +1,13 @@
 import json
 import random
 import os
+import sys
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import numpy as np
 import edge_tts
 import asyncio
-import subprocess
-import sys
 
-# Kutubxonalarni tekshirish
 try:
     from moviepy.editor import *
     from moviepy.video.fx.all import fadein, fadeout
@@ -49,7 +47,6 @@ def create_gradient(w, h, c1, c2):
         g = int(g1 * (1 - ratio) + g2 * ratio)
         b = int(b1 * (1 - ratio) + b2 * ratio)
         draw.line([(0, i), (w, i)], fill=(r, g, b))
-    # Yulduzlar
     if random.random() > 0.5:
         for _ in range(random.randint(15, 40)):
             x = random.randint(0, w)
@@ -97,7 +94,6 @@ def make_frame(quote, author, frame_num, total_frames):
     if cur:
         lines.append(cur)
     
-    # Animatsiya
     progress = frame_num / max(total_frames, 1)
     offset = int((1 - progress) * 40)
     
@@ -105,7 +101,6 @@ def make_frame(quote, author, frame_num, total_frames):
     total_h = len(lines) * line_h
     start_y = (H - total_h) // 2 - 50 + offset
     
-    # Matn
     for i, line in enumerate(lines):
         bbox = draw.textbbox((0, 0), line, font=font)
         lw = bbox[2] - bbox[0]
@@ -117,7 +112,6 @@ def make_frame(quote, author, frame_num, total_frames):
                     draw.text((x + dx, y + dy), line, font=font, fill="black")
         draw.text((x, y), line, font=font, fill="white")
     
-    # Muallif
     if author and author != "Unknown":
         author_text = f"— {author}"
         bbox = draw.textbbox((0, 0), author_text, font=font)
@@ -129,7 +123,6 @@ def make_frame(quote, author, frame_num, total_frames):
                     draw.text(((W - aw) // 2 + dx, ay + dy), author_text, font=font, fill="black")
         draw.text(((W - aw) // 2, ay), author_text, font=font, fill="#FFD700")
     
-    # Tag
     tag = "@motivbot"
     bbox = draw.textbbox((0, 0), tag, font=font)
     tw = bbox[2] - bbox[0]
@@ -143,7 +136,6 @@ def make_frame(quote, author, frame_num, total_frames):
 
 
 async def gen_audio(text, path):
-    """Audio yaratish"""
     try:
         tts = edge_tts.Communicate(text, "uz-UZ-MadinaNeural")
         await tts.save(path)
@@ -154,16 +146,27 @@ async def gen_audio(text, path):
             await tts.save(path)
             return True
         except:
-            return False
+            try:
+                tts = edge_tts.Communicate(text, "en-US-JennyNeural")
+                await tts.save(path)
+                return True
+            except:
+                return False
 
 
 def create_video(quote, author):
-    """Video yaratish va saqlash"""
+    """Video yaratish va output/video.mp4 + output/caption.txt ga saqlash"""
     print("\n🎬 Video yaratilmoqda...")
     print(f"   Matn: {quote[:50]}...")
     print(f"   Muallif: {author}")
     
-    # Audio
+    # 1. caption.txt ni yaratish (BU MUHIM!)
+    caption = f"{quote}\n\n— {author}\n\n#motivatsiya #iqtibos #kunilikiqtibos #motivbot"
+    with open("output/caption.txt", "w", encoding="utf-8") as f:
+        f.write(caption)
+    print(f"   ✅ output/caption.txt yaratildi")
+    
+    # 2. Audio
     audio_path = "temp_audio.mp3"
     audio_ok = asyncio.run(gen_audio(quote, audio_path))
     
@@ -177,6 +180,7 @@ def create_video(quote, author):
         except:
             audio = None
     
+    # 3. Kadrlar
     fps = 24
     total = int(dur * fps) + 24
     
@@ -187,6 +191,7 @@ def create_video(quote, author):
         if i % 10 == 0:
             print(f"   {i}/{total}")
     
+    # 4. Render
     print("   🎞️ Render...")
     clip = ImageSequenceClip(frames, fps=fps)
     
@@ -196,7 +201,6 @@ def create_video(quote, author):
     clip = clip.fx(fadein, 0.3)
     clip = clip.fadeout(0.5)
     
-    # FAQAT output/video.mp4 ga saqlash
     output_path = "output/video.mp4"
     print(f"   📁 Saqlanmoqda: {output_path}")
     
@@ -216,6 +220,7 @@ def create_video(quote, author):
     print(f"✅ Video tayyor!")
     print(f"   Fayl: {output_path}")
     print(f"   Hajmi: {os.path.getsize(output_path) / 1024 / 1024:.1f} MB")
+    print(f"   Caption: output/caption.txt")
     
     return output_path
 
@@ -227,12 +232,12 @@ if __name__ == "__main__":
         with open("facts.json", "r", encoding="utf-8") as f:
             data = json.load(f)
     except Exception as e:
-        print(f"❌ facts.json xatosi: {e}")
-        
-        # Agar facts.json bo'lmasa, test matni bilan ishlaydi
+        print(f"⚠️ facts.json xatosi: {e}")
+        print("   Test matni bilan ishlayman")
         data = [
             {"quote": "Muvaffaqiyatga erishish uchun birinchi qadam - bu harakat qilishni boshlash!", "author": "MotivBot"},
-            {"quote": "Kuniga 1% yaxshilanib boring. Bir yildan so'ng 37 barobar kuchli bo'lasiz!", "author": "James Clear"}
+            {"quote": "Kuniga 1% yaxshilanib boring. Bir yildan so'ng 37 barobar kuchli bo'lasiz!", "author": "James Clear"},
+            {"quote": "Orzularingiz sari intiling! Hech qachon taslim bo'lmang.", "author": "Unknown"}
         ]
     
     if isinstance(data, list):
@@ -259,5 +264,9 @@ if __name__ == "__main__":
     print(f"\n📖 Tanlangan iqtibos: {text[:60]}...")
     print(f"✍️  Muallif: {author}")
     
-    # Video yaratish
+    # Video + caption yaratish
     create_video(text, author)
+    
+    print("\n✅ Barcha fayllar tayyor:")
+    print("   - output/video.mp4")
+    print("   - output/caption.txt")
