@@ -1,82 +1,30 @@
 [
-    {
-        "quote": "Muvaffaqiyatga erishishning kaliti - bu harakat qilishni boshlash!",
-        "author": "MotivBot"
-    },
-    {
-        "quote": "Kuniga 1% yaxshilanib boring. Bir yildan so'ng 37 barobar kuchli bo'lasiz!",
-        "author": "James Clear"
-    },
-    {
-        "quote": "Orzularingiz sari intiling! Hech qachon kech emas.",
-        "author": "Unknown"
-    },
-    {
-        "quote": "Eng katta xato - hech nima qilmaslikdir.",
-        "author": "Elon Musk"
-    },
-    {
-        "quote": "Muvaffaqiyat - bu muvaffaqiyatsizlikdan muvaffaqiyatsizlikka o'tib, ishtiyoqni yo'qotmaslikdir.",
-        "author": "Winston Churchill"
-    },
-    {
-        "quote": "Hayotda eng muhim narsa - bu o'z maqsadingizni topish va unga erishish uchun kurashish.",
-        "author": "Steve Jobs"
-    },
-    {
-        "quote": "Bilim - bu kuch. Ammo bilimni amalda qo'llash - haqiqiy kuch.",
-        "author": "Napoleon Hill"
-    },
-    {
-        "quote": "Mening hayotimdagi eng katta kashfiyotim - bu inson o'z fikrlarini o'zgartirish orqali hayotini o'zgartirishi mumkin.",
-        "author": "William James"
-    },
-    {
-        "quote": "Muvaffaqiyatsizlik - bu muvaffaqiyatga erishish uchun eng yaxshi imkoniyatdir.",
-        "author": "Henry Ford"
-    },
-    {
-        "quote": "Harakat qilishdan qo'rqma. Muvaffaqiyatsizlikdan qo'rqma. Yagona qo'rqadigan narsa - bu hech narsa qilmaslik.",
-        "author": "Theodore Roosevelt"
-    },
-    {
-        "quote": "Imkoniyatlar quyosh chiqishi kabi - agar siz juda uzoq kutsangiz, ularni sog'inasiz.",
-        "author": "William Arthur Ward"
-    },
-    {
-        "quote": "Bugun qilishingiz mumkin bo'lgan narsani ertaga qoldirmang.",
-        "author": "Benjamin Franklin"
-    },
-    {
-        "quote": "O'qish - bu eng yaxshi investitsiya.",
-        "author": "Warren Buffett"
-    },
-    {
-        "quote": "Muvaffaqiyatga erishish uchun siz birinchi navbatda muvaffaqiyatsizlikka tayyor bo'lishingiz kerak.",
-        "author": "J.K. Rowling"
-    },
-    {
-        "quote": "Kuchli bo'lish - bu yiqilganingizda yana turishdir.",
-        "author": "Unknown"
-    },
-    {
-        "quote": "Eng yaxshi vaqt - bu hozir. Eng yaxshi joy - bu siz turgan joy. Eng yaxshi narsa - bu hozir qilayotgan ishingiz.",
-        "author": "Unknown"
-    },
-    {
-        "quote": "Maqsad - bu orzu, ammo maqsadga ega bo'lish - bu orzuni amalga oshirishning birinchi qadamidir.",
-        "author": "Tony Robbins"
-    },
-    {
-        "quote": "Sizning hayotingiz sizning qo'lingizda. Faqat siz uni o'zgartirishingiz mumkin.",
-        "author": "Unknown"
-    },
-    {
-        "quote": "Har bir kunning eng muhim daqiqasi - bu sizning tanlovingizdir.",
-        "author": "Unknown"
-    },
-    {
-        "quote": "Muvaffaqiyat - bu sizning komfort zonangizdan chiqishda boshlanadi.",
-        "author": "Unknown"
-    }
+  {"hook": "Nega har safar yangi ish boshlaganingizda, ichingizdan bir ovoz 'sen uddalay olmaysan' deydi?", "reveal": "Chunki miya o'zgarishni xavf deb qabul qiladi - u sizni yomon ko'rgani uchun emas, aksincha, sizni 'himoya qilaman' deb shunday qiladi. Bu ovozni jim qildirish shart emas - siz undan kuchliroq harakat qilishingiz kifoya.", "theme": "person silhouette mountain sunrise"},
+  {"hook": "Nega boshqalarning muvaffaqiyati sizni ba'zan xursand qilish o'rniga ezib yuboradi, deb o'ylaysiz?", "reveal": "Chunki siz ularning 10 yillik yo'lini emas, faqat bugungi natijasini ko'rasiz. Solishtirish - bu o'zingizning boshlanishingizni, birovning oxiri bilan taqqoslash degani. Bu - g'irrom o'yin, va siz unda hech qachon yutolmaysiz.", "theme": "person walking path forest"},
+  {"hook": "Nega ba'zi odamlar muvaffaqiyatsizlikdan keyin ham tez tiklanadi, boshqalar esa yillar davomida o'zini yo'qotib qo'yadi?", "reveal": "Farq shunda - muvaffaqiyatli odamlar muvaffaqiyatsizlikni 'men yaramasman' deb emas, 'bu usul ishlamadi' deb o'qiydi. Bitta so'z o'zgarishi - butun hayotingiz yo'nalishini o'zgartirishi mumkin.", "theme": "person standing up ocean waves"},
+  {"hook": "Nega hamma narsani 'ertaga boshlayman' deb qo'yib, ertaga ham xuddi shu gapni takrorlaysiz?", "reveal": "Chunki miya katta o'zgarishdan qo'rqadi, lekin kichik qadamdan qo'rqmaydi. Muvaffaqiyat - bir kunlik jasorat emas, har kuni takrorlanadigan mayda qarorlar yig'indisi.", "theme": "sunrise morning calm nature"},
+  {"hook": "Nega o'zingizga qattiq gapirish sizni yaxshilash o'rniga, ko'proq harakatsiz qilib qo'yadi, deb o'ylaysiz?", "reveal": "Chunki miya o'z-o'ziga tanqidni haqiqiy tahdid sifatida qabul qiladi va himoya rejimiga o'tadi - harakat emas, qochish rejimiga. Achinish emas, tushunish orqali o'sish tezroq keladi.", "theme": "person reflection water calm"},
+  {"hook": "Nega ba'zan eng katta orzuyingizga erishish qo'rqinchli tuyuladi, muvaffaqiyatsizlikdan ham ko'proq?", "reveal": "Chunki muvaffaqiyat notanish hudud - u sizdan yangi shaxsga aylanishni talab qiladi, va miya notanishlikdan qo'rqadi, hatto u yaxshi bo'lsa ham. Bu tabiiy - lekin sizni to'xtatishi shart emas.", "theme": "person cliff edge view sunset"},
+  {"hook": "Nega bir kun mashq qilib, ikkinchi kuni butunlay tashlab qo'yasiz, deb o'ylaysiz?", "reveal": "Chunki siz 'mukammal bo'lish' bilan 'davom etish'ni chalkashtirib yuboryapsiz. Kichik, nomukammal harakat - katta, mukammal rejadan doim kuchliroq, chunki u haqiqatan sodir bo'ladi.", "theme": "person running exercise outdoor"},
+  {"hook": "Nega hamma sizdan nimadir kutayotgandek his qilasiz, garchi hech kim hech narsa demagan bo'lsa ham?", "reveal": "Bu - miyaning ichki ovozi, tashqi haqiqat emas. Ko'pincha eng qattiq baholovchi - atrofingizdagilar emas, oyna qarshisidagi o'zingizsiz.", "theme": "person mirror reflection window"},
+  {"hook": "Nega bitta salbiy izoh, yuzta ijobiy izohdan ko'ra sizga ko'proq ta'sir qiladi, deb o'ylaysiz?", "reveal": "Bu - miyaning qadimiy dasturi, u xavfni imkoniyatdan tezroq eslab qoladi, chunki ajdodlarimiz uchun xavfni unutish o'lim degani edi. Bugun bu dastur sizga xizmat qilmaydi - buni bilish, undan ozod bo'lishning birinchi qadami.", "theme": "person thinking contemplative window"},
+  {"hook": "Nega o'zgarish uchun 'to'g'ri vaqt'ni kutib, yillar o'tkazib yuborasiz?", "reveal": "Chunki 'to'g'ri vaqt' hech qachon kelmaydi - u faqat harakat boshlagandan keyin, orqaga qarab 'ana o'sha payt to'g'ri ekan' deb ataladi. Vaqtni kutish emas, vaqtni yaratish kerak.", "theme": "clock time hourglass concept"},
+  {"hook": "Nega kimdir sizni tanqid qilganda, kuni bo'yi o'sha bitta gapni miyangizda aylantirib yurasiz?", "reveal": "Chunki inson miyasi tasdiqni emas, tahdidni ustuvor deb hisoblaydi. Lekin bilib qo'ying - bir kishining fikri sizning haqiqatingiz emas, faqat uning cheklangan nuqtai nazari.", "theme": "person walking city alone"},
+  {"hook": "Nega maqsadga yetgandan keyin ham, xursandchilik faqat bir necha kunga yetadi, deb o'ylaysiz?", "reveal": "Chunki miya moslashadigan mexanizm - bu 'gedonik moslashish' deb ataladi. Doimiy baxt tashqi natijada emas, ichki jarayonning o'zida - o'sish, o'rganish, intilishning o'zida yashiringan.", "theme": "person achievement mountain top"},
+  {"hook": "Nega ba'zan hech narsa qilmaslik, noto'g'ri narsa qilishdan ham qo'rqinchliroq tuyuladi?", "reveal": "Chunki harakatsizlik xavfsiz tuyuladi, lekin aslida u eng katta xavf - imkoniyatlarning sekin-asta yo'qolishi. Har bir kechiktirilgan kun - qaytarib bo'lmaydigan kun.", "theme": "person sitting window thinking"},
+  {"hook": "Nega o'zingizga ishonch, boshqalar sizga ishonganda emas, faqat siz o'zingizga harakat qilib ko'rsatganingizda paydo bo'ladi?", "reveal": "Chunki ishonch - so'zlardan emas, dalillardan quriladi. Har safar va'dangizni o'zingizga bajarganingizda, miyangiz yangi dalil oladi: 'menga ishonish mumkin'.", "theme": "person confident walking street"},
+  {"hook": "Nega eng katta o'sish, eng qulay damlarda emas, eng qiyin damlarda sodir bo'ladi, deb o'ylaysiz?", "reveal": "Chunki qulaylik saqlaydi, qiyinchilik shakllantiradi. Mushak qulay vaznda emas, qarshilikda kuchayadi - ruh ham xuddi shunday ishlaydi.", "theme": "person storm rain walking strong"},
+  {"hook": "Nega 'men buni hech qachon uddalolmayman' degan fikr, aslida yolg'on bo'lishi mumkinligini bilasizmi?", "reveal": "Chunki miya 'hech qachon' degan so'zni haqiqat sifatida qabul qiladi, garchi u shunchaki bir lahzalik his bo'lsa ham. Bugungi 'uddalolmayman' - ertangi 'uddaladim' ning boshlanishi bo'lishi mumkin.", "theme": "person open arms freedom field"},
+  {"hook": "Nega ko'pchilik odam o'z orzusidan emas, boshqalarning fikridan qo'rqib, orqaga chekinadi?", "reveal": "Chunki ijtimoiy rad etish miya uchun jismoniy og'riq bilan bir xil hududda qayta ishlanadi. Lekin haqiqat shunda - o'n yildan keyin, kim nima deganini emas, siz nima qilmaganingizni eslaysiz.", "theme": "person crowd alone standing out"},
+  {"hook": "Nega kichik yutuqlarni nishonlamaslik, sizni katta maqsaddan uzoqlashtirishi mumkin, deb o'ylaysiz?", "reveal": "Chunki miya mukofotlanmagan harakatni davom ettirishga qiynaladi - bu dofamin tizimining ishlash usuli. Har bir kichik g'alabani tan olish - keyingi qadam uchun yoqilg'i beradi.", "theme": "person celebrating sunset arms up"},
+  {"hook": "Nega ba'zi odamlar tanqidni eshitib o'sadi, boshqalari esa butunlay to'xtab qoladi?", "reveal": "Farq - tanqidni 'men kim ekanligim' emas, 'men nima qilganim' haqida deb qabul qilishda. Bu kichik farq, katta hayotni belgilaydi.", "theme": "person listening focused calm"},
+  {"hook": "Nega sizni charchatgan narsa ko'pincha ish emas, balki qaror qabul qilishning o'zi bo'ladi, deb o'ylaysiz?", "reveal": "Bu hodisa 'qaror charchashi' deb ataladi - miyaning har bir tanlov uchun cheklangan resursi bor. Muhim ishlarni kun boshida hal qilish, kuchingizni behuda sarflamaslikning siri.", "theme": "person tired desk work evening"},
+  {"hook": "Nega hamma narsa yaxshi ketayotganda ham, ichingizda 'bu uzoq davom etmaydi' degan tuyg'u paydo bo'ladi?", "reveal": "Bu - 'imposter sindromi' deb ataladi, va u aslida muvaffaqiyatli odamlarning aksariyatida uchraydi. Bu tuyg'uning borligi, sizning yolg'onchi ekanligingizni emas, o'sayotganingizni anglatadi.", "theme": "person achievement proud standing"},
+  {"hook": "Nega o'zgarish qiyin, garchi hozirgi holatingizdan norozi bo'lsangiz ham?", "reveal": "Chunki notanish yaxshilikdan ko'ra, tanish yomonlik miya uchun xavfsizroq tuyuladi. Qulaylik zonasi qulay emas - u shunchaki tanish, va bu ikkisi bir xil narsa emas.", "theme": "person doorway light choice"},
+  {"hook": "Nega eng kuchli odamlar, aslida eng ko'p yiqilgan odamlar bo'lishi mumkin, deb o'ylaysiz?", "reveal": "Chunki kuch - yiqilmaslikdan emas, har safar turishni tanlashdan tug'iladi. Sizni his qiluvchi kuch - urinishlaringiz sonida, muvaffaqiyatsizliklaringiz yo'qligida emas.", "theme": "person getting up strength determination"},
+  {"hook": "Nega vaqti-vaqti bilan hech narsa qilgingiz kelmaydi, garchi maqsadlaringiz aniq bo'lsa ham?", "reveal": "Bu - dam olish emas, tuxtash emas - bu miyaning signal berish usuli. Uni e'tiborsiz qoldirish emas, tinglash - uzoq muddatli barqarorlikning kaliti.", "theme": "person resting calm peaceful"},
+  {"hook": "Nega boshqalarga yordam berish, ko'pincha o'zingizga yordam berishdan osonroq tuyuladi?", "reveal": "Chunki o'zingizga nisbatan mehribonlik ko'rsatish - o'rganilishi kerak bo'lgan ko'nikma, tug'ma xususiyat emas. Boshqalarga bergan mehringizning bir qismini o'zingizga ham bering.", "theme": "person self care calm morning"},
+  {"hook": "Nega kelajak haqida qayg'urish, hozirgi kuningizni ham zaharlab qo'yadi, deb o'ylaysiz?", "reveal": "Chunki miya haqiqiy xavf bilan xayoliy xavfni farqlay olmaydi - ikkalasiga ham bir xil stress bilan javob beradi. Nazorat qila olmaydigan narsadan qo'rqish - bugungi kuningizni bugun yo'qotish degani.", "theme": "person looking distance thoughtful"},
+  {"hook": "Nega 'men allaqachon kech qoldim' degan fikr, ko'pincha noto'g'ri bo'ladi, deb o'ylaysiz?", "reveal": "Chunki taqqoslash uchun ishlatayotgan 'muddat' - siz o'zingiz o'ylab topgan standart, hayotning o'zi qo'ygan qoida emas. Boshlash uchun yagona 'kech' - hech qachon boshlamaslik.", "theme": "person new beginning path sunrise"},
+  {"hook": "Nega ba'zan eng yaxshi qaror - shunchaki harakatni to'xtatib, nafas olish bo'ladi?", "reveal": "Chunki charchagan miya, yorug' fikr bera olmaydi. Dam olish - dangasalik emas - bu keyingi sakrash uchun orqaga tortilgan yoy.", "theme": "person breathing calm nature peaceful"}
 ]
