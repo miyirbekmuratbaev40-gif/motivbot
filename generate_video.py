@@ -2,301 +2,223 @@ import json
 import random
 import os
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import numpy as np
 from moviepy.editor import *
 from moviepy.video.fx.all import fadein, fadeout
 import edge_tts
 import asyncio
-import requests
-from io import BytesIO
 
 # =============== KONFIGURATSIYA ===============
-FONTS_DIR = "fonts"
 OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Instagram Reels o'lchami: 1080x1920 (9:16)
-VIDEO_WIDTH = 1080
-VIDEO_HEIGHT = 1920
+# Instagram Reels: 1080x1920
+W, H = 1080, 1920
 
-# Ranglar palitrasi (trenddagi ranglar)
-COLOR_PALETTES = [
-    # Gradient uchun 2 ta rang
-    [("#0f0c29", "#302b63", "#24243e")],  # Kosmik
-    [("#ff6b6b", "#ffa500", "#ffd700")],   # Quyosh botishi
-    [("#00b4db", "#0083b0", "#00d2ff")],   # Okean
-    [("#8e2de2", "#4a00e0", "#7b2ff7")],   # Binafsha
-    [("#f12711", "#f5af19", "#f5af19")],   # Olov
-    [("#11998e", "#38ef7d", "#11998e")],   # Yashil
-    [("#fc5c7d", "#6a82fb", "#fc5c7d")],   # Pushti-ko'k
-    [("#1a1a2e", "#16213e", "#0f3460")],   # Tungi
-    [("#f7971e", "#ffd200", "#f7971e")],   # Oltin
-    [("#667eea", "#764ba2", "#667eea")],   # Lavanda
+# Ranglar (oddiy, ishonchli)
+COLORS = [
+    ["#0f0c29", "#302b63"],  # Kosmik
+    ["#ff6b6b", "#ffa500"],  # Quyosh
+    ["#00b4db", "#0083b0"],  # Okean
+    ["#8e2de2", "#4a00e0"],  # Binafsha
+    ["#11998e", "#38ef7d"],  # Yashil
+    ["#fc5c7d", "#6a82fb"],  # Pushti
+    ["#1a1a2e", "#16213e"],  # Tungi
+    ["#f7971e", "#ffd200"],  # Oltin
 ]
 
-# Fon videolar uchun URL'lar (muqobil: rangli gradient)
-BACKGROUND_VIDEOS = []  # Agar fon video qo'shmoqchi bo'lsangiz, URL'larni qo'ying
 
-
-def create_gradient_background(width, height, colors, direction="vertical"):
-    """Chiroyli gradient fon yaratish"""
+def create_gradient(w, h, color1, color2):
+    """Gradient fon yaratish"""
     from PIL import ImageColor
     
-    base = Image.new('RGB', (width, height), (0, 0, 0))
-    draw = ImageDraw.Draw(base)
+    img = Image.new('RGB', (w, h))
+    draw = ImageDraw.Draw(img)
     
-    r1, g1, b1 = ImageColor.getrgb(colors[0])
-    r2, g2, b2 = ImageColor.getrgb(colors[1])
+    r1, g1, b1 = ImageColor.getrgb(color1)
+    r2, g2, b2 = ImageColor.getrgb(color2)
     
-    if direction == "vertical":
-        for i in range(height):
-            ratio = i / height
-            r = int(r1 * (1 - ratio) + r2 * ratio)
-            g = int(g1 * (1 - ratio) + g2 * ratio)
-            b = int(b1 * (1 - ratio) + b2 * ratio)
-            draw.line([(0, i), (width, i)], fill=(r, g, b))
-    else:  # diagonal
-        for i in range(width):
-            for j in range(height):
-                ratio = (i + j) / (width + height)
-                r = int(r1 * (1 - ratio) + r2 * ratio)
-                g = int(g1 * (1 - ratio) + g2 * ratio)
-                b = int(b1 * (1 - ratio) + b2 * ratio)
-                draw.point((i, j), fill=(r, g, b))
+    for i in range(h):
+        ratio = i / h
+        r = int(r1 * (1 - ratio) + r2 * ratio)
+        g = int(g1 * (1 - ratio) + g2 * ratio)
+        b = int(b1 * (1 - ratio) + b2 * ratio)
+        draw.line([(0, i), (w, i)], fill=(r, g, b))
     
-    # Yulduz effekti qo'shish (kosmik stil)
-    if "kosmik" in str(colors).lower() or random.random() > 0.7:
-        for _ in range(random.randint(20, 50)):
-            x = random.randint(0, width)
-            y = random.randint(0, height)
-            size = random.randint(1, 3)
-            brightness = random.randint(150, 255)
-            draw.ellipse([x, y, x + size, y + size], 
-                        fill=(brightness, brightness, brightness))
+    # Yulduzlar (50% extimol bilan)
+    if random.random() > 0.5:
+        for _ in range(random.randint(15, 40)):
+            x = random.randint(0, w)
+            y = random.randint(0, h)
+            s = random.randint(1, 3)
+            b = random.randint(180, 255)
+            draw.ellipse([x, y, x + s, y + s], fill=(b, b, b))
     
-    return base
+    return img
 
 
-def add_text_with_outline(draw, text, position, font, fill_color, outline_color="black", outline_width=3):
-    """Matnga kontur qo'shish"""
-    x, y = position
-    
-    # Kontur
-    for dx in range(-outline_width, outline_width + 1):
-        for dy in range(-outline_width, outline_width + 1):
-            if dx != 0 or dy != 0:
-                draw.text((x + dx, y + dy), text, font=font, fill=outline_color)
-    
-    # Asosiy matn
-    draw.text((x, y), text, font=font, fill=fill_color)
-
-
-def wrap_text(text, font, max_width, draw):
-    """Matnni kenglikka moslab o'rash"""
+def wrap_text(text, font, max_w, draw):
+    """Matnni o'rash"""
     words = text.split()
     lines = []
-    current_line = ""
-    
+    cur = ""
     for word in words:
-        test_line = current_line + " " + word if current_line else word
-        bbox = draw.textbbox((0, 0), test_line, font=font)
-        if bbox[2] - bbox[0] <= max_width:
-            current_line = test_line
+        test = cur + " " + word if cur else word
+        bbox = draw.textbbox((0, 0), test, font=font)
+        if bbox[2] - bbox[0] <= max_w:
+            cur = test
         else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-    
-    if current_line:
-        lines.append(current_line)
-    
+            if cur:
+                lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
     return lines
 
 
-def create_quote_frame(quote, author, frame_number=0, total_frames=48):
-    """Bitta kadr yaratish (harakat animatsiyasi bilan)"""
+def make_frame(quote, author, frame_num, total_frames):
+    """1 kadr yaratish"""
+    c1, c2 = random.choice(COLORS)
+    img = create_gradient(W, H, c1, c2)
+    img = img.filter(ImageFilter.GaussianBlur(radius=1))
+    draw = ImageDraw.Draw(img)
     
-    # Gradient ranglar palitrasini tanlash
-    palette = random.choice(COLOR_PALETTES)[0]
+    # Font
+    font_paths = []
+    if os.path.exists("fonts"):
+        for f in os.listdir("fonts"):
+            if f.endswith(".ttf") or f.endswith(".otf"):
+                font_paths.append(os.path.join("fonts", f))
     
-    # Fon yaratish
-    bg = create_gradient_background(VIDEO_WIDTH, VIDEO_HEIGHT, palette, 
-                                     "vertical" if frame_number % 2 == 0 else "diagonal")
-    
-    # Bir oz xira qilish (blur) - chuqurlik effekti
-    bg = bg.filter(ImageFilter.GaussianBlur(radius=2))
-    
-    # Nozik naqsh qo'shish
-    overlay = Image.new('RGBA', (VIDEO_WIDTH, VIDEO_HEIGHT), (0, 0, 0, 0))
-    overlay_draw = ImageDraw.Draw(overlay)
-    
-    # Geometrik shakllar (doiralar)
-    for _ in range(random.randint(3, 6)):
-        cx = random.randint(100, VIDEO_WIDTH - 100)
-        cy = random.randint(100, VIDEO_HEIGHT - 100)
-        r = random.randint(50, 200)
-        alpha = random.randint(10, 30)
-        overlay_draw.ellipse([cx - r, cy - r, cx + r, cy + r], 
-                           fill=(255, 255, 255, alpha))
-    
-    bg = Image.alpha_composite(bg.convert('RGBA'), overlay)
-    draw = ImageDraw.Draw(bg)
-    
-    # Fontlarni yuklash
-    try:
-        # Asosiy quote uchun katta font
-        quote_font_size = 65
-        quote_font = ImageFont.truetype(os.path.join(FONTS_DIR, "Roboto-Bold.ttf"), quote_font_size)
-        # Muallif uchun kichik font
-        author_font = ImageFont.truetype(os.path.join(FONTS_DIR, "Roboto-Italic.ttf"), 40)
-        # 'MotivBot' tagi uchun
-        tag_font = ImageFont.truetype(os.path.join(FONTS_DIR, "Roboto-Regular.ttf"), 25)
-    except:
-        # Agar font topilmasa, default
+    if font_paths:
+        quote_font = ImageFont.truetype(random.choice(font_paths), 58)
+        author_font = ImageFont.truetype(random.choice(font_paths), 36)
+        tag_font = ImageFont.truetype(random.choice(font_paths), 22)
+    else:
         quote_font = ImageFont.load_default()
         author_font = ImageFont.load_default()
         tag_font = ImageFont.load_default()
     
     # Matnni o'rash
-    max_text_width = VIDEO_WIDTH - 200  # 100px chap va o'ngdan margin
-    lines = wrap_text(quote, quote_font, max_text_width, draw)
+    max_w = W - 160
+    lines = wrap_text(quote, quote_font, max_w, draw)
     
-    # Animatsiya parametrlari (matn harakati)
-    animation_offset = 0
-    if total_frames > 0:
-        # Matn yuqoridan pastga siljiydi
-        progress = frame_number / total_frames
-        animation_offset = int((1 - progress) * 50)  # 50px siljish
+    # Animatsiya offset
+    progress = frame_num / max(total_frames, 1)
+    offset = int((1 - progress) * 40)
     
-    # Matn boshlanish nuqtasi
-    total_text_height = len(lines) * 80  # Har bir satr balandligi
-    start_y = (VIDEO_HEIGHT - total_text_height) // 2 - 50 + animation_offset
+    # Matn markazi
+    line_h = 70
+    total_h = len(lines) * line_h
+    start_y = (H - total_h) // 2 - 40 + offset
     
-    # " (qo'shtirnoq) belgisi - dekorativ
-    try:
-        deco_font = ImageFont.truetype(os.path.join(FONTS_DIR, "Roboto-Bold.ttf"), 120)
-    except:
-        deco_font = ImageFont.load_default()
-    
-    quote_color = "#FFFFFF"  # Oq matn
-    outline_color = "#000000"  # Qora kontur
-    
-    # Har bir satrni chizish
+    # Matnni chizish (oq rang + qora kontur)
     for i, line in enumerate(lines):
         bbox = draw.textbbox((0, 0), line, font=quote_font)
-        line_width = bbox[2] - bbox[0]
-        x = (VIDEO_WIDTH - line_width) // 2
+        lw = bbox[2] - bbox[0]
+        x = (W - lw) // 2
+        y = start_y + i * line_h
         
-        y = start_y + i * 80
-        add_text_with_outline(draw, line, (x, y), quote_font, quote_color, outline_color, 2)
+        # Kontur
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                if dx != 0 or dy != 0:
+                    draw.text((x + dx, y + dy), line, font=quote_font, fill="black")
+        # Asosiy matn
+        draw.text((x, y), line, font=quote_font, fill="white")
     
-    # Muallif matni
-    author_text = f"— {author}" if author else ""
-    if author_text:
+    # Muallif
+    if author:
+        author_text = f"— {author}"
         bbox = draw.textbbox((0, 0), author_text, font=author_font)
         aw = bbox[2] - bbox[0]
-        author_y = start_y + len(lines) * 80 + 30
-        add_text_with_outline(draw, author_text, 
-                            ((VIDEO_WIDTH - aw) // 2, author_y), 
-                            author_font, "#FFD700", outline_color, 2)  # Oltin rang
+        ay = start_y + len(lines) * line_h + 20
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                if dx != 0 or dy != 0:
+                    draw.text(((W - aw) // 2 + dx, ay + dy), author_text, font=author_font, fill="black")
+        draw.text(((W - aw) // 2, ay), author_text, font=author_font, fill="#FFD700")
     
-    # Pastki tag: @motivbot yoki boshqa
-    tag_text = "@motivbot"
-    bbox = draw.textbbox((0, 0), tag_text, font=tag_font)
+    # Tag
+    tag = "@motivbot"
+    bbox = draw.textbbox((0, 0), tag, font=tag_font)
     tw = bbox[2] - bbox[0]
-    add_text_with_outline(draw, tag_text, 
-                        ((VIDEO_WIDTH - tw) // 2, VIDEO_HEIGHT - 80), 
-                        tag_font, "#AAAAAA", outline_color, 1)
+    for dx in range(-1, 2):
+        for dy in range(-1, 2):
+            if dx != 0 or dy != 0:
+                draw.text(((W - tw) // 2 + dx, H - 70 + dy), tag, font=tag_font, fill="black")
+    draw.text(((W - tw) // 2, H - 70), tag, font=tag_font, fill="#888888")
     
-    return bg
-
-
-def create_animated_frame(quote, author, frame_num, total_frames):
-    """Animatsiyali kadr yaratish"""
-    img = create_quote_frame(quote, author, frame_num, total_frames)
     return np.array(img)
 
 
-async def generate_audio(text, output_path):
-    """Edge-TTS orqali ovoz yaratish"""
+async def gen_audio(text, path):
+    """Ovoz yaratish"""
     try:
-        # Ovoz sozlamalari: tez va ifodali
-        voice = "uz-UZ-MadinaNeural"  # O'zbek tili ovozi
-        # Agar o'zbek tili ishlamasa, rus yoki ingliz:
-        # voice = "ru-RU-DariyaNeural" 
-        
-        communicate = edge_tts.Communicate(text, voice)
-        await communicate.save(output_path)
+        voice = "uz-UZ-MadinaNeural"
+        tts = edge_tts.Communicate(text, voice)
+        await tts.save(path)
         return True
-    except Exception as e:
-        print(f"Ovoz yaratishda xatolik: {e}")
-        return False
-
-
-def create_video(quote, author, output_path="motivational_reel.mp4"):
-    """To'liq video yaratish"""
-    
-    print(f"🎬 Video yaratilmoqda: {quote[:50]}...")
-    
-    # Audio yaratish
-    audio_path = "temp_audio.mp3"
-    asyncio.run(generate_audio(quote, audio_path))
-    
-    # Audio davomiyligini aniqlash
-    try:
-        audio_clip = AudioFileClip(audio_path)
-        audio_duration = audio_clip.duration
     except:
-        audio_duration = 5  # Agar audio bo'lmasa, default 5 sek
+        try:
+            # Agar o'zbek tili ishlamasa, rus tilida
+            voice = "ru-RU-DariyaNeural"
+            tts = edge_tts.Communicate(text, voice)
+            await tts.save(path)
+            return True
+        except:
+            return False
+
+
+def create_video(quote, author, output_path):
+    """Video yaratish"""
+    print(f"🎬 Video yaratilmoqda...")
     
-    # Video davomiyligi (audio + 1 sekund pauza)
-    video_duration = audio_duration + 1.5
+    # Audio
+    audio_path = "temp_audio.mp3"
+    asyncio.run(gen_audio(quote, audio_path))
+    
+    # Audio uzunligi
+    try:
+        audio = AudioFileClip(audio_path)
+        dur = audio.duration
+    except:
+        dur = 5.0
+        audio = None
+    
+    # FPS va kadrlar
     fps = 24
-    total_frames = int(video_duration * fps)
-    
-    print(f"   Audio: {audio_duration:.1f}s, Video: {video_duration:.1f}s, Frames: {total_frames}")
+    total = int(dur * fps) + 24  # +1 sekund
     
     # Kadrlarni yaratish
+    print(f"   Kadrlar yaratilmoqda: {total} ta")
     frames = []
-    for i in range(total_frames):
-        frame = create_animated_frame(quote, author, i, total_frames)
-        frames.append(frame)
-        if i % 10 == 0:
-            print(f"   Progress: {i}/{total_frames} frames")
+    for i in range(total):
+        frames.append(make_frame(quote, author, i, total))
+        if i % 20 == 0:
+            print(f"   {i}/{total}")
     
-    # Videoni yaratish
-    video_clip = ImageSequenceClip(frames, fps=fps)
+    # Video
+    print("   Video render...")
+    clip = ImageSequenceClip(frames, fps=fps)
     
-    # Ovoz qo'shish
-    if os.path.exists(audio_path):
-        try:
-            audio_clip = AudioFileClip(audio_path)
-            # Video va audio uzunligini moslash
-            if audio_clip.duration > video_clip.duration:
-                audio_clip = audio_clip.subclip(0, video_clip.duration)
-            video_clip = video_clip.set_audio(audio_clip)
-        except Exception as e:
-            print(f"   Audio qo'shishda xatolik: {e}")
+    if audio and os.path.exists(audio_path):
+        clip = clip.set_audio(audio)
     
-    # Transition effektlari
-    video_clip = video_clip.fx(fadein, 0.3, None)  # Kirish fade
-    video_clip = video_clip.fadeout(0.5)  # Chiqish fade
+    clip = clip.fx(fadein, 0.3)
+    clip = clip.fadeout(0.5)
     
-    # Videoni saqlash
-    print(f"   💾 Video saqlanmoqda: {output_path}")
-    video_clip.write_videofile(
-        output_path, 
-        codec='libx264', 
+    clip.write_videofile(
+        output_path,
+        codec='libx264',
         audio_codec='aac',
         fps=fps,
-        preset='medium',
-        bitrate='5000k',
-        threads=4
+        preset='ultrafast',  # Tezroq render
+        bitrate='4000k'
     )
     
-    # Tozalash
-    video_clip.close()
+    clip.close()
     if os.path.exists(audio_path):
         os.remove(audio_path)
     
@@ -304,29 +226,26 @@ def create_video(quote, author, output_path="motivational_reel.mp4"):
     return output_path
 
 
-# =============== ASOSIY ISHGA TUSHIRISH ===============
 if __name__ == "__main__":
-    # facts.json dan iqtibosni o'qish
+    # facts.json dan o'qish
     with open("facts.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     
     quotes = data.get("quotes", data.get("facts", data))
     
     if isinstance(quotes, list):
-        quote_data = random.choice(quotes)
-        if isinstance(quote_data, dict):
-            text = quote_data.get("quote", quote_data.get("text", quote_data.get("fact", "")))
-            author = quote_data.get("author", "Unknown")
+        q = random.choice(quotes)
+        if isinstance(q, dict):
+            text = q.get("quote", q.get("text", q.get("fact", "")))
+            author = q.get("author", "Unknown")
         else:
-            text = str(quote_data)
+            text = str(q)
             author = "Unknown"
     else:
         text = str(quotes)
         author = "Unknown"
     
-    # Unique filename
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = os.path.join(OUTPUT_DIR, f"reel_{timestamp}.mp4")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out = os.path.join(OUTPUT_DIR, f"reel_{ts}.mp4")
     
-    # Video yaratish
-    create_video(text, author, output_path)
+    create_video(text, author, out)
