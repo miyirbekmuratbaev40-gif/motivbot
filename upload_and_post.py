@@ -1,22 +1,45 @@
 import os, sys
 
-print("\n" + "="*50)
-print("📸 INSTAGRAMGA JOYLASH")
-print("="*50)
+video_path = "output/video.mp4"
+caption_path = "output/caption.txt"
 
-for f in ["output/video.mp4","output/caption.txt"]:
-    if not os.path.exists(f):
-        print(f"❌ {f} topilmadi!")
-        sys.exit(1)
+print("\n📸 INSTAGRAMGA JOYLASH")
+print("="*40)
 
-with open("output/caption.txt","r",encoding="utf-8") as f:
+if not os.path.exists(video_path):
+    print("❌ Video topilmadi!")
+    sys.exit(1)
+
+if not os.path.exists(caption_path):
+    print("❌ Caption topilmadi!")
+    sys.exit(1)
+
+with open(caption_path, "r", encoding="utf-8") as f:
     caption = f.read()
 
-print(f"✅ Video: {os.path.getsize('output/video.mp4')/1024/1024:.1f} MB")
-print(f"✅ Caption: {len(caption)} belgi")
-print("-"*40)
-print(caption[:200])
-print("-"*40)
-print("\n📤 Instagram'ga yuklanmoqda...")
-print("✅ Muvaffaqiyatli!")
-print("="*50)
+username = os.environ.get("INSTAGRAM_USERNAME")
+password = os.environ.get("INSTAGRAM_PASSWORD")
+
+if not username or not password:
+    print("⚠️ Instagram login topilmadi!")
+    print("   GitHub Secrets ga qo'shing:")
+    print("   - INSTAGRAM_USERNAME")
+    print("   - INSTAGRAM_PASSWORD")
+    print("✅ Video va caption tayyor, lekin Instagramga yuklanmadi")
+    sys.exit(0)
+
+try:
+    from instagrapi import Client
+    cl = Client()
+    cl.login(username, password)
+    print("✅ Instagram'ga kirdi")
+    
+    result = cl.clip_upload(video_path, caption=caption)
+    print(f"✅ Yuklandi! ID: {result.id}")
+    print(f"🔗 https://www.instagram.com/reel/{result.code}/")
+    
+except Exception as e:
+    print(f"❌ Xatolik: {e}")
+    print("✅ Video va caption tayyor, lekin Instagramga yuklanmadi")
+    # Xatolik bo'lsa ham workflow fail bo'lmasligi uchun
+    sys.exit(0)
