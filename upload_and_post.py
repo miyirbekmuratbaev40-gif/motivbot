@@ -1,45 +1,112 @@
-import os, sys
+"""
+upload_and_post.py
+-------------------
+Instagram Graph API orqali videoni Reels sifatida joylaydi.
 
-video_path = "output/video.mp4"
-caption_path = "output/caption.txt"
+Video fayl avvalroq (GitHub Actions workflow ichida, alohida bash qadamida)
+"media" branch'iga joylab qo'yilgan va ochiq raw.githubusercontent.com
+URL orqali kirish mumkin - shu URL VIDEO_URL muhit o'zgaruvchisi orqali
+uzatiladi (Cloudinary yoki boshqa uchinchi tomon xizmati kerak emas).
 
-print("\n📸 INSTAGRAMGA JOYLASH")
-print("="*40)
+Kerakli maxfiy o'zgaruvchilar (GitHub Secrets):
+    IG_ACCESS_TOKEN   (Instagram/Facebook uzoq muddatli access token)
+    IG_USER_ID        (Instagram Business Account ID)
 
-if not os.path.exists(video_path):
-    print("❌ Video topilmadi!")
-    sys.exit(1)
+Kerakli muhit o'zgaruvchisi (workflow ichida avtomatik beriladi):
+    VIDEO_URL         (video.mp4 ga ochiq havola)
+"""
 
-if not os.path.exists(caption_path):
-    print("❌ Caption topilmadi!")
-    sys.exit(1)
+import os
+import sys
+import time
 
-with open(caption_path, "r", encoding="utf-8") as f:
-    caption = f.read()
+import requests
 
-username = os.environ.get("INSTAGRAM_USERNAME")
-password = os.environ.get("INSTAGRAM_PASSWORD")
+# MUHIM: "Instagram API with Instagram Login" orqali olingan (IGAA... bilan
+# boshlanadigan) tokenlar uchun so'rovlar graph.facebook.com EMAS,
+# graph.instagram.com orqali yuborilishi shart.
+GRAPH_API_VERSION = "v21.0"
+GRAPH_HOST = "https://graph.instagram.com"
 
-if not username or not password:
-    print("⚠️ Instagram login topilmadi!")
-    print("   GitHub Secrets ga qo'shing:")
-    print("   - INSTAGRAM_USERNAME")
-    print("   - INSTAGRAM_PASSWORD")
-    print("✅ Video va caption tayyor, lekin Instagramga yuklanmadi")
-    sys.exit(0)
 
-try:
-    from instagrapi import Client
-    cl = Client()
-    cl.login(username, password)
-    print("✅ Instagram'ga kirdi")
-    
-    result = cl.clip_upload(video_path, caption=caption)
-    print(f"✅ Yuklandi! ID: {result.id}")
-    print(f"🔗 https://www.instagram.com/reel/{result.code}/")
-    
-except Exception as e:
-    print(f"❌ Xatolik: {e}")
-    print("✅ Video va caption tayyor, lekin Instagramga yuklanmadi")
-    # Xatolik bo'lsa ham workflow fail bo'lmasligi uchun
-    sys.exit(0)
+def env(name):
+    val = os.environ.get(name)
+    if not val:
+        print(f"XATOLIK: {name} muhit o'zgaruvchisi topilmadi.")
+        sys.exit(1)
+    return val
+
+
+def check(resp):
+    """Javobni tekshiradi, xato bo'lsa Instagram'ning aniq xato matnini chiqaradi."""
+    if not resp.ok:
+        print(f"XATO JAVOB (status {resp.status_code}): {resp.text}")
+    resp.raise_for_status()
+    return resp
+
+
+def create_media_container(video_url, caption):
+    ig_user_id = env("IG_USER_ID")
+    token = env("IG_ACCESS_TOKEN")
+    url = f"{GRAPH_HOST}/{GRAPH_API_VERSION}/{ig_user_id}/media"
+    params = {
+        "media_type": "REELS",
+        "video_url": video_url,
+        "caption": caption,
+        "access_token": token,
+    }
+    resp = requests.post(url, data=params, timeout=60)
+    check(resp)
+    creation_id = resp.json()["id"]
+    print(f"Media konteyner yaratildi: {creation_id}")
+    return creation_id
+
+
+def wait_until_ready(creation_id, timeout=300, interval=10):
+    token = env("IG_ACCESS_TOKEN")
+    url = f"{GRAPH_HOST}/{GRAPH_API_VERSION}/{creation_id}"
+    elapsed = 0
+    while elapsed < timeout:
+        resp = requests.get(url, params={"fields": "status_code", "access_token": token})
+        check(resp)
+        status = resp.json().get("status_code")
+        print(f"Holat: {status}")
+        if status == "FINISHED":
+            return True
+        if status == "ERROR":
+            raise RuntimeError("Instagram video qayta ishlashda xato yuz berdi.")
+        time.sleep(interval)
+        elapsed += interval
+    raise TimeoutError("Video qayta ishlash kutilganidan uzoq davom etdi.")
+
+
+def publish_media(creation_id):
+    ig_user_id = env("IG_USER_ID")
+    token = env("IG_ACCESS_TOKEN")
+    url = f"{GRAPH_HOST}/{GRAPH_API_VERSION}/{ig_user_id}/media_publish"
+    params = {"creation_id": creation_id, "access_token": token}
+    resp = requests.post(url, data=params, timeout=60)
+    check(resp)
+    post_id = resp.json()["id"]
+    print(f"E'lon qilindi! Post ID: {post_id}")
+    return post_id
+
+
+def main():
+    caption_path = "output/caption.txt"
+
+    if not os.path.exists(caption_path):
+        print("XATOLIK: output/caption.txt topilmadi. Avval generate_video.py ni ishga tushiring.")
+        sys.exit(1)
+
+    with open(caption_path, "r", encoding="utf-8") as f:
+        caption = f.read()
+
+    video_url = env("VIDEO_URL")
+    creation_id = create_media_container(video_url, caption)
+    wait_until_ready(creation_id)
+    publish_media(creation_id)
+
+
+if __name__ == "__main__":
+    main()
