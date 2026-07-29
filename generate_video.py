@@ -94,9 +94,39 @@ def get_audio_duration(path):
     return float(result.stdout.strip())
 
 
-def generate_speech_two_part(hook_text, reveal_text):
+def _synthesize_with_boundaries(text, voice, out_path):
+    """
+    edge-tts'ning 'stream' rejimi orqali audio yaratadi VA har bir so'zning
+    aniq boshlanish vaqtini (WordBoundary) qo'lga oladi - bu orqali subtitr
+    matnni gapirilayotgan so'zga aniq sinxronlab ko'rsatish mumkin bo'ladi
+    ("karaoke" effekti).
+    Qaytaradi: [{"text": so'z, "start": soniya, "end": soniya}, ...]
+    """
     import edge_tts
 
+    boundaries = []
+
+    async def _run():
+        communicate = edge_tts.Communicate(text, voice, rate="-1%")
+        with open(out_path, "wb") as f:
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    f.write(chunk["data"])
+                elif chunk["type"] == "WordBoundary":
+                    # offset/duration 100-nanosekundlarda keladi -> soniyaga o'giramiz
+                    start = chunk["offset"] / 10_000_000
+                    dur = chunk["duration"] / 10_000_000
+                    boundaries.append({
+                        "text": chunk["text"],
+                        "start": start,
+                        "end": start + dur,
+                    })
+
+    asyncio.run(_run())
+    return boundaries
+
+
+def generate_speech_two_part(hook_text, reveal_text):
     voice = random.choice(VOICES)
     hook_raw = os.path.join(OUTPUT_DIR, "hook_raw.mp3")
     reveal_raw = os.path.join(OUTPUT_DIR, "reveal_raw.mp3")
@@ -105,13 +135,8 @@ def generate_speech_two_part(hook_text, reveal_text):
     silence_path = os.path.join(OUTPUT_DIR, "silence.wav")
     combined_path = os.path.join(OUTPUT_DIR, "audio.mp3")
 
-    async def _run():
-        # Rate biroz tabiiyroq eshitilishi uchun -3% dan -1% ga o'zgartirildi -
-        # ortiqcha sekinlashtirish ovozni "cho'zilgan/robot" kabi eshittiradi
-        await edge_tts.Communicate(hook_text, voice, rate="-1%").save(hook_raw)
-        await edge_tts.Communicate(reveal_text, voice, rate="-1%").save(reveal_raw)
-
-    asyncio.run(_run())
+    hook_words = _synthesize_with_boundaries(hook_text, voice, hook_raw)
+    reveal_words = _synthesize_with_boundaries(reveal_text, voice, reveal_raw)
 
     # Har bir segmentni bir xil formatga (44.1kHz, mono, PCM WAV) qayta kodlaymiz -
     # turli MP3 header/bitrate parametrlari concat vaqtida jarangsizlik/click
@@ -142,6 +167,56 @@ def generate_speech_two_part(hook_text, reveal_text):
 
     hook_dur = get_audio_duration(hook_path)
     reveal_dur = get_audio_duration(reveal_path)
+
+    print(f"Ovoz yaratildi ({voice}): savol={hook_dur:.1f}s, pauza={PAUSE_SECONDS}s, javob={reveal_dur:.1f}s")
+    print(f"So'z vaqtlari qo'lga olindi: savol={len(hook_words)} so'z, javob={len(reveal_words)} so'z")
+    return combined_path, hook_dur, reveal_dur, hook_words, reveal_words
+
+
+def add_ambient_music(voice_path, total_duration):
+    """
+    Ovoz ostiga juda past ovozli, huquqbop (mahalliy generatsiya qilingan,
+    hech qanday tashqi musiqa fayli ishlatilmaydi) "ambient" fon ohangini
+    qo'shadi - bu videoga hissiy chuqurlik va professional tuyg'u beradi,
+    lekin ovozni bosib ketmaydi.
+    """
+    music_path = os.path.join(OUTPUT_DIR, "ambient.wav")
+    mixed_path = os.path.join(OUTPUT_DIR, "audio_mixed.mp3")
+
+    # Uchta yumshoq sine to'lqinini birlashtirib, sokin "pad" ohangi yaratamiz
+    freqs = [110, 165, 220]  # A2, E3, A3 - sokin, kelishgan akkord
+    inputs = []
+    filter_parts = []
+    for i, freq in enumerate(freqs):
+        inputs += ["-f", "lavfi", "-i", f"sine=frequency={freq}:duration={total_duration}"]
+        filter_parts.append(f"[{i}:a]volume=0.5[a{i}]")
+
+    mix_inputs = "".join(f"[a{i}]" for i in range(len(freqs)))
+    filter_complex = (
+        ";".join(filter_parts)
+        + f";{mix_inputs}amix=inputs={len(freqs)}:duration=first,"
+        + f"volume=0.04,afade=t=in:d=2,afade=t=out:st={max(total_duration - 2, 0)}:d=2[music]"
+    )
+
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", *inputs, "-filter_complex", filter_complex,
+             "-map", "[music]", music_path],
+            check=True, capture_output=True,
+        )
+
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", voice_path, "-i", music_path,
+             "-filter_complex",
+             "[0:a]volume=1.0[voice];[voice][1:a]amix=inputs=2:duration=first:dropout_transition=0[out]",
+             "-map", "[out]", "-acodec", "libmp3lame", "-q:a", "2", mixed_path],
+            check=True, capture_output=True,
+        )
+        print("Fon musiqasi qo'shildi (past ovozli ambient pad)")
+        return mixed_path
+    except subprocess.CalledProcessError as e:
+        print(f"OGOHLANTIRISH: Fon musiqa qo'shib bo'lmadi ({e}), faqat ovoz ishlatiladi.")
+        return voice_path
 
     print(f"Ovoz yaratildi ({voice}): savol={hook_dur:.1f}s, pauza={PAUSE_SECONDS}s, javob={reveal_dur:.1f}s")
     return combined_path, hook_dur, reveal_dur
@@ -251,23 +326,71 @@ def _draw_badge(draw, text, center_y, bg_color, text_color=(20, 20, 20, 255)):
     return center_y + 62
 
 
-def render_hook_overlay(hook_text):
-    """Video boshida ko'rinadigan kadr: faqat qiziqtiruvchi savol."""
+# Matn paneli doim shu geometriyada joylashadi - faqat ichidagi qisqa
+# so'z-guruhi (chunk) almashinib turadi, panel va belgi o'zgarmaydi.
+PANEL_TOP = 720
+PANEL_BOTTOM = 1260
+CHUNK_SIZE = 3  # nechta so'zdan bittalab ekranga chiqarish
+
+
+def chunk_words(word_boundaries, chunk_size=CHUNK_SIZE):
+    """So'z chegaralarini (edge-tts'dan) kichik guruhlarga bo'ladi,
+    har biriga aniq boshlanish/tugash vaqtini biriktiradi."""
+    if not word_boundaries:
+        return []
+    chunks = []
+    for i in range(0, len(word_boundaries), chunk_size):
+        group = word_boundaries[i:i + chunk_size]
+        chunks.append({
+            "text": " ".join(w["text"] for w in group),
+            "start": group[0]["start"],
+            "end": group[-1]["end"],
+        })
+    return chunks
+
+
+def render_phase_backdrop(badge_text, badge_color, include_cta=False):
+    """Har bir faza (savol/javob) uchun DOIMIY fon: qora panel + belgi.
+    Matnning o'zi bunga kirmaydi - u alohida, tez almashadigan qatlamda."""
+    img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    draw.rectangle([(0, PANEL_TOP - 50), (WIDTH, PANEL_BOTTOM + 50)], fill=(0, 0, 0, 165))
+    _draw_badge(draw, badge_text, PANEL_TOP, badge_color)
+
+    if include_cta:
+        cta_font = ImageFont.truetype(FONT_BOLD, 42)
+        cta_text = "❤️ Layk  •  📤 Ulashing  •  🔔 Obuna"
+        cw = draw.textlength(cta_text, font=cta_font)
+        cta_y = HEIGHT - 200
+        draw.rounded_rectangle(
+            [(WIDTH // 2 - cw / 2 - 30, cta_y - 16), (WIDTH // 2 + cw / 2 + 30, cta_y + 56)],
+            radius=16, fill=(0, 0, 0, 150),
+        )
+        draw.text((WIDTH // 2 - cw / 2, cta_y), cta_text, font=cta_font, fill=(255, 255, 255, 255))
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    suffix = "reveal" if include_cta else "hook"
+    path = os.path.join(OUTPUT_DIR, f"backdrop_{suffix}.png")
+    img.save(path)
+    return path
+
+
+def render_chunk_text(text, index, prefix, base_size=68, max_lines=3):
+    """Bitta so'z-guruhini (2-3 so'z) katta, markazlashgan matn sifatida
+    chizadi - panel band ichida, badge ostidagi bo'sh maydonda joylashadi."""
     img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     max_width = WIDTH - 160
 
-    lines, font, font_size = _fit_lines(draw, hook_text, 72, max_width, max_lines=6)
+    lines, font, font_size = _fit_lines(draw, text, base_size, max_width, max_lines=max_lines, min_size=44)
     line_height = int(font_size * 1.35)
-    badge_h = 90
-    total_h = badge_h + 30 + line_height * len(lines)
-    box_top = (HEIGHT - total_h) // 2 - 60
 
-    draw.rectangle([(0, box_top - 50), (WIDTH, box_top + total_h + 60)], fill=(0, 0, 0, 160))
+    text_area_top = PANEL_TOP + 90
+    text_area_h = PANEL_BOTTOM - text_area_top
+    total_h = line_height * len(lines)
+    start_y = text_area_top + max((text_area_h - total_h) // 2, 0)
 
-    y_after_badge = _draw_badge(draw, "BIR O'YLAB KO'RING...", box_top, (255, 200, 40, 235))
-
-    start_y = y_after_badge + 30
     for i, line in enumerate(lines):
         w = draw.textlength(line, font=font)
         x = (WIDTH - w) // 2
@@ -275,51 +398,40 @@ def render_hook_overlay(hook_text):
         draw.text((x + 3, y + 3), line, font=font, fill=(0, 0, 0, 170))
         draw.text((x, y), line, font=font, fill=(255, 255, 255, 255))
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    path = os.path.join(OUTPUT_DIR, "overlay_hook.png")
+    path = os.path.join(OUTPUT_DIR, f"chunk_{prefix}_{index:03d}.png")
     img.save(path)
     return path
 
 
-def render_reveal_overlay(reveal_text):
-    """Javob paytida ko'rinadigan kadr: aniq javob + izohga chorlash."""
-    img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    max_width = WIDTH - 160
+def build_caption_layers(hook_text, reveal_text, hook_words, reveal_words, reveal_start):
+    """
+    Butun subtitr tizimini quradi: backdroplar (doimiy) + chunklar (tez
+    almashadigan qisqa matnlar), har birining aniq vaqt oynasi bilan.
+    Agar so'z vaqtlari (word boundaries) biror sababdan bo'sh kelsa (masalan,
+    tarmoq muammosi), butun gapni bitta chunk sifatida ko'rsatishga qaytadi -
+    bu tizimni butunlay to'xtatib qo'ymaslik uchun zaxira yechim.
+    """
+    layers = []  # har biri: {"path":, "start":, "end":}
 
-    lines, font, font_size = _fit_lines(draw, reveal_text, 66, max_width, max_lines=7)
-    line_height = int(font_size * 1.35)
-    badge_h = 90
-    total_h = badge_h + 30 + line_height * len(lines)
-    box_top = (HEIGHT - total_h) // 2 - 60
+    hook_backdrop = render_phase_backdrop("BIR O'YLAB KO'RING...", (255, 200, 40, 235), include_cta=False)
+    reveal_backdrop = render_phase_backdrop("TUSHUNING 💡", (90, 220, 130, 235), include_cta=True)
 
-    draw.rectangle([(0, box_top - 50), (WIDTH, box_top + total_h + 60)], fill=(0, 0, 0, 170))
+    hook_chunks = chunk_words(hook_words) or [{"text": hook_text, "start": 0, "end": None}]
+    reveal_chunks = chunk_words(reveal_words) or [{"text": reveal_text, "start": 0, "end": None}]
 
-    y_after_badge = _draw_badge(draw, "TUSHUNING 💡", box_top, (90, 220, 130, 235))
+    layers.append({"path": hook_backdrop, "start": 0, "end": None})  # end to'ldiriladi main()da
+    for i, c in enumerate(hook_chunks):
+        img_path = render_chunk_text(c["text"], i, "hook")
+        layers.append({"path": img_path, "start": c["start"], "end": c["end"], "_phase": "hook"})
 
-    start_y = y_after_badge + 30
-    for i, line in enumerate(lines):
-        w = draw.textlength(line, font=font)
-        x = (WIDTH - w) // 2
-        y = start_y + i * line_height
-        draw.text((x + 3, y + 3), line, font=font, fill=(0, 0, 0, 170))
-        draw.text((x, y), line, font=font, fill=(255, 255, 255, 255))
+    layers.append({"path": reveal_backdrop, "start": reveal_start, "end": None})
+    for i, c in enumerate(reveal_chunks):
+        start = reveal_start + c["start"]
+        end = (reveal_start + c["end"]) if c["end"] is not None else None
+        img_path = render_chunk_text(c["text"], i, "reveal")
+        layers.append({"path": img_path, "start": start, "end": end, "_phase": "reveal"})
 
-    # Pastda doimiy ko'rinadigan like/obuna chaqirig'i (caption o'qimaydiganlar uchun ham)
-    cta_font = ImageFont.truetype(FONT_BOLD, 42)
-    cta_text = "❤️ Layk  •  🔔 Obuna  •  💬 Izoh"
-    cw = draw.textlength(cta_text, font=cta_font)
-    cta_y = HEIGHT - 200
-    draw.rounded_rectangle(
-        [(WIDTH // 2 - cw / 2 - 30, cta_y - 16), (WIDTH // 2 + cw / 2 + 30, cta_y + 56)],
-        radius=16, fill=(0, 0, 0, 150),
-    )
-    draw.text((WIDTH // 2 - cw / 2, cta_y), cta_text, font=cta_font, fill=(255, 255, 255, 255))
-
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    path = os.path.join(OUTPUT_DIR, "overlay_reveal.png")
-    img.save(path)
-    return path
+    return layers, hook_backdrop, reveal_backdrop
 
 
 def render_gradient_fallback():
@@ -341,8 +453,7 @@ def render_gradient_fallback():
 # Hammasini ffmpeg bilan birlashtirish (vaqtga qarab overlay almashtiriladi)
 # ---------------------------------------------------------------------------
 
-def compose_video(background_path, hook_overlay, reveal_overlay, audio_path,
-                   hook_dur, reveal_start, duration, is_video_bg):
+def compose_video(background_path, caption_layers, audio_path, duration, is_video_bg):
     out_path = os.path.join(OUTPUT_DIR, "video.mp4")
     fade_out_start = max(duration - 0.6, 0)
 
@@ -365,20 +476,34 @@ def compose_video(background_path, hook_overlay, reveal_overlay, audio_path,
             f"fade=t=in:st=0:d=0.6,fade=t=out:st={fade_out_start}:d=0.6"
         )
 
-    filter_complex = (
-        f"[0:v]{bg_filter}[bg];"
-        f"[bg][1:v]overlay=0:0:enable='between(t,0,{hook_dur})'[bg2];"
-        f"[bg2][2:v]overlay=0:0:enable='gte(t,{reveal_start})'[v]"
-    )
+    # Har bir keyingi qatlam avvalgisining ustiga, o'ziga vaqt oynasida qo'yiladi.
+    filter_parts = [f"[0:v]{bg_filter}[bg0]"]
+    prev_label = "bg0"
+    overlay_inputs = []
+    for i, layer in enumerate(caption_layers):
+        overlay_inputs += ["-i", layer["path"]]
+        input_idx = i + 1  # 0-input - fon, keyingilari - overlaylar
+        end = layer["end"] if layer["end"] is not None else duration
+        next_label = f"bg{i + 1}"
+        filter_parts.append(
+            f"[{prev_label}][{input_idx}:v]overlay=0:0:"
+            f"enable='between(t,{layer['start']},{end})'[{next_label}]"
+        )
+        prev_label = next_label
+
+    # Oxirgi qatlam nomini "v" ga o'zgartiramiz
+    filter_parts[-1] = filter_parts[-1].replace(f"[{prev_label}]", "[v]")
+
+    filter_complex = ";".join(filter_parts)
+    audio_input_idx = len(caption_layers) + 1
 
     cmd = [
         "ffmpeg", "-y",
         *bg_input,
-        "-i", hook_overlay,
-        "-i", reveal_overlay,
+        *overlay_inputs,
         "-i", audio_path,
         "-filter_complex", filter_complex,
-        "-map", "[v]", "-map", "3:a",
+        "-map", "[v]", "-map", f"{audio_input_idx}:a",
         "-t", str(duration),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
         "-c:a", "aac", "-b:a", "128k",
@@ -404,29 +529,42 @@ def main():
     fact, state = pick_fact(facts, state)
     save_state(state)
 
-    audio_path, hook_dur, reveal_dur = generate_speech_two_part(fact["hook"], fact["reveal"])
+    audio_path, hook_dur, reveal_dur, hook_words, reveal_words = generate_speech_two_part(
+        fact["hook"], fact["reveal"]
+    )
     reveal_start = hook_dur + PAUSE_SECONDS
     duration = reveal_start + reveal_dur + 1.2  # javobdan keyin "nafas" vaqti
+
+    audio_path = add_ambient_music(audio_path, duration)
 
     bg_video_path = os.path.join(OUTPUT_DIR, "background.mp4")
     fetched = fetch_background_video(bg_video_path, theme=fact.get("theme"), min_duration=duration)
     is_video_bg = fetched is not None
     background_path = fetched if fetched else render_gradient_fallback()
 
-    hook_overlay = render_hook_overlay(fact["hook"])
-    reveal_overlay = render_reveal_overlay(fact["reveal"])
-
-    video_path = compose_video(
-        background_path, hook_overlay, reveal_overlay, audio_path,
-        hook_dur, reveal_start, duration, is_video_bg,
+    caption_layers, hook_backdrop_path, reveal_backdrop_path = build_caption_layers(
+        fact["hook"], fact["reveal"], hook_words, reveal_words, reveal_start
     )
+    # Backdrop qatlamlarining "end" vaqtini endi to'ldiramiz (hook_dur/duration
+    # shu paytgacha hisoblanmagan edi) - ularni o'z fayl yo'li orqali aniq topamiz.
+    for layer in caption_layers:
+        if layer["path"] == hook_backdrop_path:
+            layer["end"] = hook_dur
+        elif layer["path"] == reveal_backdrop_path:
+            layer["end"] = duration
+        elif layer["end"] is None:
+            # Zaxira holat: so'z vaqtlari topilmagan, butun faza davomida ko'rsatamiz
+            layer["end"] = hook_dur if layer.get("_phase") == "hook" else duration
+
+    video_path = compose_video(background_path, caption_layers, audio_path, duration, is_video_bg)
 
     caption = (
         f"💭 {fact['hook']}\n\n"
         f"👇 Javobni pastdan o'qing (yoki videoni oxirigacha tomosha qiling!)\n\n"
         f"✨ {fact['reveal']}\n\n"
-        f"Sizga qaysi jumla ko'proq ta'sir qildi? Izohga yozing! 👇\n"
-        f"❤️ Layk qiling  •  🔔 Obuna bo'ling  •  📤 Kimgadir kerak bo'lsa, yuboring\n\n"
+        f"Sizga qaysi jumla ko'proq ta'sir qildi? Izohga yozing! 👇\n\n"
+        f"📤 Hozir shu daqiqada kimningdir aynan shunga o'xshash gapga muhtoj ekanini bilasiz - shu videoni unga yuboring.\n"
+        f"❤️ Layk qiling  •  🔔 Obuna bo'ling  •  🔖 Keyin qayta o'qish uchun saqlab qo'ying\n\n"
         f"#motivatsiya #psixologiya #ozinirivojlantirish #ichkikuch #maqsad #ongsatilar #ilhomlantiruvchi #uzbekmotivatsiya"
     )
     with open(os.path.join(OUTPUT_DIR, "caption.txt"), "w", encoding="utf-8") as f:
